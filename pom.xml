@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -11,17 +12,18 @@
     <packaging>war</packaging>
 
     <properties>
-        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>6.1.2</spring.version>
     </properties>
 
     <dependencies>
-
-        <!-- Ton framework maison -->
+        <!-- VOTRE NOUVEAU FRAMEWORK MAISON -->
         <dependency>
-            <groupId>com.myframework</groupId>
-            <artifactId>myframeworkSpring</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>com.example</groupId>
+            <artifactId>front-servlet-app</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Spring MVC -->
@@ -39,20 +41,61 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JDBC -->
+        <!-- Spring JDBC -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
             <version>${spring.version}</version>
         </dependency>
 
-        <!-- Driver DB -->
+        <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.1</version>
         </dependency>
 
+        <!-- JSTL pour les JSP -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
+        <!-- Pour l'implémentation JSTL (nécessaire au runtime) -->
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>3.0.1</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <finalName>sprint0</finalName>
+        
+        <plugins>
+            <!-- Plugin Maven Compiler -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+
+            <!-- Plugin pour créer le WAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <warName>${project.build.finalName}</warName>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

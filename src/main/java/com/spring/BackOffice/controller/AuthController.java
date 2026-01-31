@@ -1,6 +1,6 @@
 package com.spring.BackOffice.controller;
 
-import com.myframework.annotation.*;
+import com.myframework.core.annotations.*;
 import com.spring.BackOffice.config.JdbcTemplateProvider;
 import com.spring.BackOffice.model.User;
 
@@ -8,6 +8,8 @@ import com.spring.BackOffice.model.User;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+
+
 
 @Controller
 public class AuthController {
@@ -23,7 +25,7 @@ public class AuthController {
         }
     }
 
-    @Post("/auth/login")
+    @PostMapping("/auth/login")
     public String login(String email, String password) {
         if (jdbcTemplate == null) {
             return "Erreur : JdbcTemplate non initialisé";
@@ -36,8 +38,8 @@ public class AuthController {
         }
     }
 
-    @Get("/auth/users")
-    @Json
+    @RestAPI
+    @GetMapping("/auth/users")
     public String listUsers() {
         if (jdbcTemplate == null) {
             return "Erreur : JdbcTemplate non initialisé";
