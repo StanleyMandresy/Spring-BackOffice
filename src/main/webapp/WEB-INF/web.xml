@@ -3,19 +3,28 @@
 
     <display-name>BackOffice</display-name>
 
-   <servlet>
-    <servlet-name>frontServlet</servlet-name>
-    <servlet-class>com.myframework.servlet.FrontServlet</servlet-class>
+  <servlet>
+    <servlet-name>FrontServlet</servlet-name>
+    <servlet-class>com.myframework.core.FrontServlet</servlet-class>
+    
+    <!-- PREMIER paramètre : scan-package -->
+    <init-param>
+        <param-name>scan-package</param-name>
+        <param-value>com.myframework.core,com.spring.BackOffice.controller</param-value>
+    </init-param>
+    
+    <!-- DEUXIÈME paramètre : contextConfigLocation -->
     <init-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>/WEB-INF/spring-context.xml</param-value>
     </init-param>
+    
     <load-on-startup>1</load-on-startup>
 </servlet>
 
 <servlet-mapping>
-    <servlet-name>frontServlet</servlet-name>
-    <url-pattern>/backoffice/*</url-pattern>
+    <servlet-name>FrontServlet</servlet-name>
+    <url-pattern>/</url-pattern>
 </servlet-mapping>
 
 </web-app>
