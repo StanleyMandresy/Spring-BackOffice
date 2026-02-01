@@ -1,0 +1,265 @@
+{
+  "info": {
+    "name": "BackOffice Auth API",
+    "description": "Collection Postman pour tester l'API d'authentification JSON",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Check Auth Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/check",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "check"]
+            },
+            "description": "Vérifier le statut d'authentification actuel"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has success status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"success\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "adminpass",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "login"]
+            },
+            "description": "Connexion avec username et password"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "wrongpassword",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "login"]
+            },
+            "description": "Test de connexion avec des identifiants invalides (devrait retourner 401)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/me",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "me"]
+            },
+            "description": "Récupérer le profil de l'utilisateur connecté (nécessite @RequireAuth)"
+          },
+          "response": []
+        },
+        {
+          "name": "Register New User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "newuser",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "newpass123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "register"]
+            },
+            "description": "Inscription d'un nouvel utilisateur"
+          },
+          "response": []
+        },
+        {
+          "name": "Register - Duplicate User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "anypass",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "register"]
+            },
+            "description": "Test d'inscription avec un username existant (devrait retourner 409)"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/sprint0/api/auth/logout",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "api", "auth", "logout"]
+            },
+            "description": "Déconnexion et invalidation de la session"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints d'authentification"
+    },
+    {
+      "name": "Legacy Endpoints (Non-JSON)",
+      "item": [
+        {
+          "name": "List Users (Plain Text)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/sprint0/auth/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "auth", "users"]
+            },
+            "description": "Ancien endpoint qui retourne du texte brut (non-JSON)"
+          },
+          "response": []
+        },
+        {
+          "name": "Legacy Login (Plain Text)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "admin",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "adminpass",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/sprint0/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["sprint0", "auth", "login"]
+            },
+            "description": "Ancien endpoint de login (retourne texte brut)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Anciens endpoints sans format JSON (pour référence)"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/sprint0",
+      "type": "string"
+    }
+  ]
+}
