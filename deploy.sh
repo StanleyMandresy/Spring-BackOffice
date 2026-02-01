@@ -4,7 +4,7 @@
 # ======================================
 
 TOMCAT_HOME="/usr/local/tomcat"
-PROJECT_HOME="/Users/apple/Documents/GitHub/Spring-BackOffice"
+PROJECT_HOME="/Users/apple/Documents/L3/S5/NAINA/Back/Spring-BackOffice"
 APP_NAME="sprint0"
 
 echo "Arrêt de Tomcat..."
