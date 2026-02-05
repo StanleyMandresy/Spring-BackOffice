@@ -133,135 +133,136 @@ CREATE INDEX idx_reservation_date ON reservation(date_heure_souhaitee);
 CREATE INDEX idx_reservation_statut ON reservation(statut);
 CREATE INDEX idx_reservation_hotel ON reservation(id_hotel);
 
--- ============================================
--- TABLES PLANIFICATION (FINALITÉ)
--- ============================================
+-- -- ============================================
+-- -- TABLES PLANIFICATION (FINALITÉ)
+-- -- ============================================
 
--- Groupes de transport (regroupement de réservations)
-CREATE TABLE groupe_transport (
-    id_groupe SERIAL PRIMARY KEY,
-    id_vehicule INTEGER NOT NULL REFERENCES vehicule(id_vehicule),
-    id_chauffeur INTEGER NOT NULL REFERENCES chauffeur(id_chauffeur),
-    id_hotel_destination INTEGER NOT NULL REFERENCES hotel(id_hotel),
-    date_heure_depart TIMESTAMP NOT NULL,
-    date_heure_arrivee_estimee TIMESTAMP,
-    capacite_totale INTEGER NOT NULL,
-    places_occupees INTEGER DEFAULT 0,
-    statut VARCHAR(30) DEFAULT 'planifie', -- 'planifie', 'en_route', 'termine', 'annule'
-    ordre_depart INTEGER, -- Numéro d'ordre de départ dans la journée
-    date_planification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- -- Groupes de transport (regroupement de réservations)
+-- CREATE TABLE groupe_transport (
+--     id_groupe SERIAL PRIMARY KEY,
+--     id_vehicule INTEGER NOT NULL REFERENCES vehicule(id_vehicule),
+--     id_chauffeur INTEGER NOT NULL REFERENCES chauffeur(id_chauffeur),
+--     id_hotel_destination INTEGER NOT NULL REFERENCES hotel(id_hotel),
+--     date_heure_depart TIMESTAMP NOT NULL,
+--     date_heure_arrivee_estimee TIMESTAMP,
+--     capacite_totale INTEGER NOT NULL,
+--     places_occupees INTEGER DEFAULT 0,
+--     statut VARCHAR(30) DEFAULT 'planifie', -- 'planifie', 'en_route', 'termine', 'annule'
+--     ordre_depart INTEGER, -- Numéro d'ordre de départ dans la journée
+--     date_planification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
 
--- Assignation des réservations aux groupes
-CREATE TABLE reservation_groupe (
-    id_reservation_groupe SERIAL PRIMARY KEY,
-    id_reservation INTEGER NOT NULL REFERENCES reservation(id_reservation),
-    id_groupe INTEGER NOT NULL REFERENCES groupe_transport(id_groupe),
-    ordre_embarquement INTEGER, -- Ordre de prise en charge
-    date_assignation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(id_reservation, id_groupe)
-);
+-- -- Assignation des réservations aux groupes
+-- CREATE TABLE reservation_groupe (
+--     id_reservation_groupe SERIAL PRIMARY KEY,
+--     id_reservation INTEGER NOT NULL REFERENCES reservation(id_reservation),
+--     id_groupe INTEGER NOT NULL REFERENCES groupe_transport(id_groupe),
+--     ordre_embarquement INTEGER, -- Ordre de prise en charge
+--     date_assignation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     UNIQUE(id_reservation, id_groupe)
+-- );
 
--- ============================================
--- TRIGGERS & FONCTIONS
--- ============================================
+-- -- ============================================
+-- -- TRIGGERS & FONCTIONS
+-- -- ============================================
 
--- Fonction pour mettre à jour la date de modification
-CREATE OR REPLACE FUNCTION update_modified_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.date_modification = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- -- Fonction pour mettre à jour la date de modification
+-- CREATE OR REPLACE FUNCTION update_modified_column()
+-- RETURNS TRIGGER AS $$
+-- BEGIN
+--     NEW.date_modification = CURRENT_TIMESTAMP;
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
--- Trigger sur les réservations
-CREATE TRIGGER update_reservation_modtime
-    BEFORE UPDATE ON reservation
-    FOR EACH ROW
-    EXECUTE FUNCTION update_modified_column();
+-- -- Trigger sur les réservations
+-- CREATE TRIGGER update_reservation_modtime
+--     BEFORE UPDATE ON reservation
+--     FOR EACH ROW
+--     EXECUTE FUNCTION update_modified_column();
 
--- Fonction pour vérifier la capacité du groupe
-CREATE OR REPLACE FUNCTION check_groupe_capacite()
-RETURNS TRIGGER AS $$
-DECLARE
-    total_passagers INTEGER;
-    capacite_max INTEGER;
-BEGIN
-    SELECT SUM(r.nombre_passagers) INTO total_passagers
-    FROM reservation r
-    JOIN reservation_groupe rg ON r.id_reservation = rg.id_reservation
-    WHERE rg.id_groupe = NEW.id_groupe;
+-- -- Fonction pour vérifier la capacité du groupe
+-- CREATE OR REPLACE FUNCTION check_groupe_capacite()
+-- RETURNS TRIGGER AS $$
+-- DECLARE
+--     total_passagers INTEGER;
+--     capacite_max INTEGER;
+-- BEGIN
+--     SELECT SUM(r.nombre_passagers) INTO total_passagers
+--     FROM reservation r
+--     JOIN reservation_groupe rg ON r.id_reservation = rg.id_reservation
+--     WHERE rg.id_groupe = NEW.id_groupe;
     
-    SELECT capacite_totale INTO capacite_max
-    FROM groupe_transport
-    WHERE id_groupe = NEW.id_groupe;
+--     SELECT capacite_totale INTO capacite_max
+--     FROM groupe_transport
+--     WHERE id_groupe = NEW.id_groupe;
     
-    IF total_passagers > capacite_max THEN
-        RAISE EXCEPTION 'Capacité du véhicule dépassée';
-    END IF;
+--     IF total_passagers > capacite_max THEN
+--         RAISE EXCEPTION 'Capacité du véhicule dépassée';
+--     END IF;
     
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
--- Trigger pour vérification de capacité
-CREATE TRIGGER check_capacite_before_insert
-    BEFORE INSERT ON reservation_groupe
-    FOR EACH ROW
-    EXECUTE FUNCTION check_groupe_capacite();
+-- -- Trigger pour vérification de capacité
+-- CREATE TRIGGER check_capacite_before_insert
+--     BEFORE INSERT ON reservation_groupe
+--     FOR EACH ROW
+--     EXECUTE FUNCTION check_groupe_capacite();
 
--- ============================================
--- DONNÉES D'EXEMPLE
--- ============================================
+-- -- ============================================
+-- -- DONNÉES D'EXEMPLE
+-- -- ============================================
 
--- Types de carburant
-INSERT INTO type_carburation (nom_carburation) VALUES 
-('diesel'), ('essence'), ('electrique'), ('hybride');
+-- -- Types de carburant
+-- INSERT INTO type_carburation (nom_carburation) VALUES 
+-- ('diesel'), ('essence'), ('electrique'), ('hybride');
 
--- Catégories clients
-INSERT INTO categorie_client (nom_categorie, priorite) VALUES 
-('VIP', 1), ('Standard', 0), ('Groupe', 0);
+-- -- Catégories clients
+-- INSERT INTO categorie_client (nom_categorie, priorite) VALUES 
+-- ('VIP', 1), ('Standard', 0), ('Groupe', 0);
 
--- Paramètres par défaut
-INSERT INTO parametre_trajet (vitesse_moyenne_kmh, temps_attente_base_minutes) 
-VALUES (45.0, 15);
+-- -- Paramètres par défaut
+-- INSERT INTO parametre_trajet (vitesse_moyenne_kmh, temps_attente_base_minutes) 
+-- VALUES (45.0, 15);
 
--- ============================================
--- VUES UTILES
--- ============================================
+-- -- ============================================
+-- -- VUES UTILES
+-- -- ============================================
 
--- Vue pour voir les réservations en attente de planification
-CREATE VIEW v_reservations_a_planifier AS
-SELECT 
-    r.id_reservation,
-    c.nom || ' ' || COALESCE(c.prenom, '') AS client,
-    h.nom_hotel,
-    l.nom_lieu AS lieu_depart,
-    r.date_heure_souhaitee,
-    r.nombre_passagers,
-    r.statut
-FROM reservation r
-JOIN client c ON r.id_client = c.id_client
-JOIN hotel h ON r.id_hotel = h.id_hotel
-JOIN lieu l ON r.id_lieu_depart = l.id_lieu
-WHERE r.statut = 'en_attente'
-ORDER BY r.date_heure_souhaitee;
+-- -- Vue pour voir les réservations en attente de planification
+-- CREATE VIEW v_reservations_a_planifier AS
+-- SELECT 
+--     r.id_reservation,
+--     c.nom || ' ' || COALESCE(c.prenom, '') AS client,
+--     h.nom_hotel,
+--     l.nom_lieu AS lieu_depart,
+--     r.date_heure_souhaitee,
+--     r.nombre_passagers,
+--     r.statut
+-- FROM reservation r
+-- JOIN client c ON r.id_client = c.id_client
+-- JOIN hotel h ON r.id_hotel = h.id_hotel
+-- JOIN lieu l ON r.id_lieu_depart = l.id_lieu
+-- WHERE r.statut = 'en_attente'
+-- ORDER BY r.date_heure_souhaitee;
 
--- Vue pour voir les groupes de transport planifiés
-CREATE VIEW v_groupes_planifies AS
-SELECT 
-    g.id_groupe,
-    g.date_heure_depart,
-    v.immatriculation,
-    v.marque || ' ' || v.modele AS vehicule,
-    ch.nom || ' ' || COALESCE(ch.prenom, '') AS chauffeur,
-    h.nom_hotel AS destination,
-    g.places_occupees || '/' || g.capacite_totale AS occupation,
-    g.statut,
-    g.ordre_depart
-FROM groupe_transport g
-JOIN vehicule v ON g.id_vehicule = v.id_vehicule
-JOIN chauffeur ch ON g.id_chauffeur = ch.id_chauffeur
-JOIN hotel h ON g.id_hotel_destination = h.id_hotel
-ORDER BY g.date_heure_depart, g.ordre_depart;
+-- -- Vue pour voir les groupes de transport planifiés
+-- CREATE VIEW v_groupes_planifies AS
+-- SELECT 
+--     g.id_groupe,
+--     g.date_heure_depart,
+--     v.immatriculation,
+--     v.marque || ' ' || v.modele AS vehicule,
+--     ch.nom || ' ' || COALESCE(ch.prenom, '') AS chauffeur,
+--     h.nom_hotel AS destination,
+--     g.places_occupees || '/' || g.capacite_totale AS occupation,
+--     g.statut,
+--     g.ordre_depart
+-- FROM groupe_transport g
+-- JOIN vehicule v ON g.id_vehicule = v.id_vehicule
+-- JOIN chauffeur ch ON g.id_chauffeur = ch.id_chauffeur
+-- JOIN hotel h ON g.id_hotel_destination = h.id_hotel
+-- ORDER BY g.date_heure_depart, g.ordre_depart;
+khjbjhkfhgjkl
