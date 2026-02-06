@@ -233,6 +233,30 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="dateArrivee">
+                        Date d'Arrivée <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="date" 
+                        id="dateArrivee" 
+                        name="dateArrivee" 
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="heureArrivee">
+                        Heure d'Arrivée <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="time" 
+                        id="heureArrivee" 
+                        name="heureArrivee" 
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
                     <label for="commentaire">
                         Commentaire / Demandes spéciales
                     </label>
