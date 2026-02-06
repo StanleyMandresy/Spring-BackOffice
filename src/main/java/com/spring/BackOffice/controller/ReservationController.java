@@ -8,6 +8,9 @@ import com.spring.BackOffice.model.Reservation;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +65,9 @@ public class ReservationController {
             @RequestParam("idClient") String idClient,
             @RequestParam("idHotel") String idHotelStr,
             @RequestParam("nombrePassagers") String nombrePassagersStr,
-            @RequestParam("commentaire") String commentaire) {
+            @RequestParam("commentaire") String commentaire,
+            @RequestParam("dateArrivee") String dateArriveeStr,
+            @RequestParam("heureArrivee") String heureArriveeStr) {
         
         ModelView mv = new ModelView();
         mv.setView("reservation-confirmation.jsp");
@@ -78,6 +83,8 @@ public class ReservationController {
             System.out.println("  - idClient: " + idClient);
             System.out.println("  - idHotel: " + idHotelStr);
             System.out.println("  - nombrePassagers: " + nombrePassagersStr);
+            System.out.println("  - dateArrivee: " + dateArriveeStr);
+            System.out.println("  - heureArrivee: " + heureArriveeStr);
             System.out.println("  - commentaire: " + commentaire);
 
             // Conversion et validation
@@ -92,9 +99,20 @@ public class ReservationController {
 
             Long idHotel = Long.parseLong(idHotelStr);
             Integer nombrePassagers = Integer.parseInt(nombrePassagersStr);
+            
+            // Conversion date et heure
+            Timestamp dateArrivee = null;
+            Time heureArrivee = null;
+            
+            if (dateArriveeStr != null && !dateArriveeStr.trim().isEmpty()) {
+                dateArrivee = Timestamp.valueOf(dateArriveeStr + " 00:00:00");
+            }
+            if (heureArriveeStr != null && !heureArriveeStr.trim().isEmpty()) {
+                heureArrivee = Time.valueOf(heureArriveeStr + ":00");
+            }
 
             // Créer la réservation
-            Reservation reservation = new Reservation(idClient, idHotel, nombrePassagers, commentaire);
+            Reservation reservation = new Reservation(idClient, idHotel, nombrePassagers, commentaire, dateArrivee, heureArrivee);
             Long reservationId = reservation.save(jdbcTemplate);
             
             if (reservationId != null) {
