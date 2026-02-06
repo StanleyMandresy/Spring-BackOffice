@@ -17,6 +17,8 @@ CREATE TABLE reservation (
     nombre_passagers INTEGER NOT NULL CHECK (nombre_passagers > 0),
     statut VARCHAR(30) DEFAULT 'en_attente', -- 'en_attente', 'planifiee', 'en_cours', 'terminee', 'annulee'
     commentaire TEXT,
+    dateArrivee TIMESTAMP,
+    heureArrivee TIME,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

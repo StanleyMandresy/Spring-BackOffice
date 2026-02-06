@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -22,6 +23,8 @@ public class Reservation {
     private Integer nombrePassagers;
     private String statut; // 'en_attente', 'planifiee', 'en_cours', 'terminee', 'annulee'
     private String commentaire;
+    private Timestamp dateArrivee;
+    private Time heureArrivee;
     private Timestamp dateCreation;
     private Timestamp dateModification;
     
@@ -31,11 +34,14 @@ public class Reservation {
     // Constructeurs
     public Reservation() {}
 
-    public Reservation(String idClient, Long idHotel, Integer nombrePassagers, String commentaire) {
+    public Reservation(String idClient, Long idHotel, Integer nombrePassagers, String commentaire, 
+                       Timestamp dateArrivee, Time heureArrivee) {
         this.idClient = idClient;
         this.idHotel = idHotel;
         this.nombrePassagers = nombrePassagers;
         this.commentaire = commentaire;
+        this.dateArrivee = dateArrivee;
+        this.heureArrivee = heureArrivee;
         this.statut = "en_attente"; // Statut par défaut
     }
 
@@ -89,8 +95,8 @@ public class Reservation {
             throw new IllegalArgumentException("nombrePassagers doit être supérieur à 0");
         }
         
-        String sql = "INSERT INTO reservation (id_client, id_hotel, nombre_passagers, statut, commentaire) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reservation (id_client, id_hotel, nombre_passagers, statut, commentaire, dateArrivee, heureArrivee) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
@@ -101,6 +107,8 @@ public class Reservation {
             ps.setInt(3, this.nombrePassagers);
             ps.setString(4, this.statut != null ? this.statut : "en_attente");
             ps.setString(5, this.commentaire);
+            ps.setTimestamp(6, this.dateArrivee);
+            ps.setTime(7, this.heureArrivee);
             return ps;
         }, keyHolder);
         
@@ -128,6 +136,8 @@ public class Reservation {
             reservation.setNombrePassagers(rs.getInt("nombre_passagers"));
             reservation.setStatut(rs.getString("statut"));
             reservation.setCommentaire(rs.getString("commentaire"));
+            reservation.setDateArrivee(rs.getTimestamp("datearrivee"));
+            reservation.setHeureArrivee(rs.getTime("heurearrivee"));
             reservation.setDateCreation(rs.getTimestamp("date_creation"));
             reservation.setDateModification(rs.getTimestamp("date_modification"));
             
@@ -163,6 +173,12 @@ public class Reservation {
     public String getCommentaire() { return commentaire; }
     public void setCommentaire(String commentaire) { this.commentaire = commentaire; }
 
+    public Timestamp getDateArrivee() { return dateArrivee; }
+    public void setDateArrivee(Timestamp dateArrivee) { this.dateArrivee = dateArrivee; }
+
+    public Time getHeureArrivee() { return heureArrivee; }
+    public void setHeureArrivee(Time heureArrivee) { this.heureArrivee = heureArrivee; }
+
     public Timestamp getDateCreation() { return dateCreation; }
     public void setDateCreation(Timestamp dateCreation) { this.dateCreation = dateCreation; }
 
@@ -174,7 +190,7 @@ public class Reservation {
 
     @Override
     public String toString() {
-        return String.format("Reservation{id=%d, client='%s', hotel=%d, passagers=%d, statut='%s'}", 
-            idReservation, idClient, idHotel, nombrePassagers, statut);
+        return String.format("Reservation{id=%d, client='%s', hotel=%d, passagers=%d, statut='%s', dateArrivee=%s}", 
+            idReservation, idClient, idHotel, nombrePassagers, statut, dateArrivee);
     }
 }
