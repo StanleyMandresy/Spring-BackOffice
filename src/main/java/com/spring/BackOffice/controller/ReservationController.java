@@ -2,6 +2,7 @@ package com.spring.BackOffice.controller;
 
 import com.myframework.core.annotations.*;
 import com.myframework.core.ModelView;
+import com.myframework.core.JsonResponse;
 import com.spring.BackOffice.config.JdbcTemplateProvider;
 import com.spring.BackOffice.model.Hotel;
 import com.spring.BackOffice.model.Reservation;
@@ -118,26 +119,35 @@ public class ReservationController {
     }
 
     /**
-     * GET /reservation/list - Lister toutes les réservations
+     * GET /reservation/list - Lister toutes les réservations (JSON)
      */
+    @RestAPI
     @GetMapping("/reservation/list")
-    public ModelView listReservations() {
-        ModelView mv = new ModelView();
-        mv.setView("reservation-list.jsp");
-        
+    public JsonResponse listReservations() {
         try {
-            if (jdbcTemplate != null) {
-                List<Reservation> reservations = Reservation.findAll(jdbcTemplate);
-                mv.addItem("reservations", reservations);
-                System.out.println("✅ " + reservations.size() + " réservations chargées");
-            } else {
-                mv.addItem("error", "Base de données non disponible");
+            if (jdbcTemplate == null) {
+                Map<String, Object> errorData = new HashMap<>();
+                errorData.put("error", "Base de données non disponible");
+                return JsonResponse.error(500, errorData);
             }
+
+            // Récupérer toutes les réservations
+            List<Reservation> reservations = Reservation.findAll(jdbcTemplate);
+            
+            // Créer la réponse avec les métadonnées
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("reservations", reservations);
+            responseData.put("total", reservations.size());
+            responseData.put("message", "Liste des réservations récupérée avec succès");
+            
+            System.out.println("✅ " + reservations.size() + " réservations chargées (JSON)");
+            return JsonResponse.success(responseData);
+            
         } catch (Exception e) {
             e.printStackTrace();
-            mv.addItem("error", "Erreur lors du chargement des réservations: " + e.getMessage());
+            Map<String, Object> errorData = new HashMap<>();
+            errorData.put("error", "Erreur lors du chargement des réservations: " + e.getMessage());
+            return JsonResponse.error(500, errorData);
         }
-        
-        return mv;
     }
 }
