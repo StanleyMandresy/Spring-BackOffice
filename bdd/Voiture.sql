@@ -1,3 +1,4 @@
+-- Active: 1765874928894@@127.0.0.1@5432@sprint0
 -- ============================================
 -- TABLES DE RÉFÉRENCE (Configuration)
 -- ============================================
@@ -21,17 +22,17 @@ CREATE TABLE lieu (
     actif BOOLEAN DEFAULT TRUE
 );
 
--- Hôtels (destinations)
--- CREATE TABLE hotel (
---     id_hotel SERIAL PRIMARY KEY,
---     nom_hotel VARCHAR(100) NOT NULL,
---     adresse TEXT NOT NULL,
---     id_lieu INTEGER REFERENCES lieu(id_lieu), -- Localisation approximative
---     latitude DECIMAL(10, 8),
---     longitude DECIMAL(11, 8),
---     contact VARCHAR(50),
---     actif BOOLEAN DEFAULT TRUE
--- );
+Hôtels (destinations)
+CREATE TABLE hotel (
+    id_hotel SERIAL PRIMARY KEY,
+    nom_hotel VARCHAR(100) NOT NULL,
+    adresse TEXT NOT NULL,
+    id_lieu INTEGER REFERENCES lieu(id_lieu), -- Localisation approximative
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    contact VARCHAR(50),
+    actif BOOLEAN DEFAULT TRUE
+);
 
 -- Trajets prédéfinis (d'un point à un hôtel)
 CREATE TABLE trajet (
