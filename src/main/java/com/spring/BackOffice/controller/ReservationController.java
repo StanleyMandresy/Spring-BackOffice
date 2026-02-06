@@ -60,8 +60,8 @@ public class ReservationController {
     @PostMapping("/reservation/create")
     public ModelView createReservation(
             @RequestParam("idClient") String idClient,
-            @RequestParam("idHotel") Long idHotel,
-            @RequestParam("nombrePassagers") Integer nombrePassagers,
+            @RequestParam("idHotel") String idHotelStr,
+            @RequestParam("nombrePassagers") String nombrePassagersStr,
             @RequestParam("commentaire") String commentaire) {
         
         ModelView mv = new ModelView();
@@ -72,6 +72,26 @@ public class ReservationController {
                 mv.addItem("error", "Base de données non disponible");
                 return mv;
             }
+
+            // Debug logs
+            System.out.println("📥 Paramètres reçus:");
+            System.out.println("  - idClient: " + idClient);
+            System.out.println("  - idHotel: " + idHotelStr);
+            System.out.println("  - nombrePassagers: " + nombrePassagersStr);
+            System.out.println("  - commentaire: " + commentaire);
+
+            // Conversion et validation
+            if (idHotelStr == null || idHotelStr.trim().isEmpty()) {
+                mv.addItem("error", "L'hôtel doit être sélectionné");
+                return mv;
+            }
+            if (nombrePassagersStr == null || nombrePassagersStr.trim().isEmpty()) {
+                mv.addItem("error", "Le nombre de passagers est obligatoire");
+                return mv;
+            }
+
+            Long idHotel = Long.parseLong(idHotelStr);
+            Integer nombrePassagers = Integer.parseInt(nombrePassagersStr);
 
             // Créer la réservation
             Reservation reservation = new Reservation(idClient, idHotel, nombrePassagers, commentaire);

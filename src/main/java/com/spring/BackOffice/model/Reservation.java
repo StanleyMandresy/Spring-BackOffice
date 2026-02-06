@@ -79,6 +79,16 @@ public class Reservation {
      * Sauvegarder une nouvelle réservation
      */
     public Long save(JdbcTemplate jdbcTemplate) {
+        if (this.idHotel == null) {
+            throw new IllegalArgumentException("idHotel ne peut pas être null");
+        }
+        if (this.idClient == null || this.idClient.trim().isEmpty()) {
+            throw new IllegalArgumentException("idClient ne peut pas être vide");
+        }
+        if (this.nombrePassagers == null || this.nombrePassagers <= 0) {
+            throw new IllegalArgumentException("nombrePassagers doit être supérieur à 0");
+        }
+        
         String sql = "INSERT INTO reservation (id_client, id_hotel, nombre_passagers, statut, commentaire) " +
                      "VALUES (?, ?, ?, ?, ?)";
         

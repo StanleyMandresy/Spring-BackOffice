@@ -1,3 +1,15 @@
+-- Créer d'abord la table hotel (table parent)
+CREATE TABLE hotel (
+    id_hotel SERIAL PRIMARY KEY,
+    nom_hotel VARCHAR(100) NOT NULL,
+    adresse VARCHAR(200),
+    ville VARCHAR(100),
+    prix_nuit NUMERIC(10,2),
+    nombre_etoiles INTEGER CHECK (nombre_etoiles BETWEEN 1 AND 5),
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Créer ensuite la table reservation (table enfant avec clé étrangère)
 CREATE TABLE reservation (
     id_reservation SERIAL PRIMARY KEY,
     id_client VARCHAR(50) NOT NULL,
@@ -7,16 +19,6 @@ CREATE TABLE reservation (
     commentaire TEXT,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE hotel (
-    id_hotel SERIAL PRIMARY KEY,
-    nom_hotel VARCHAR(100) NOT NULL,
-    adresse VARCHAR(200),
-    ville VARCHAR(100),
-    prix_nuit NUMERIC(10,2),
-    nombre_etoiles INTEGER CHECK (nombre_etoiles BETWEEN 1 AND 5),
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Script d'insertion des hôtels
