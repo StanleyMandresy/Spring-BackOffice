@@ -57,7 +57,7 @@ CREATE TABLE client (
     contact VARCHAR(50),
     email VARCHAR(100),
     id_categorie INTEGER REFERENCES categorie_client(id_categorie),
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
     actif BOOLEAN DEFAULT TRUE
 );
 
@@ -108,7 +108,7 @@ CREATE TABLE parametre_trajet (
     coefficient_trafic_matin DECIMAL(3, 2) DEFAULT 1.3, -- Multiplicateur 6h-9h
     coefficient_trafic_soir DECIMAL(3, 2) DEFAULT 1.4, -- Multiplicateur 17h-20h
     temps_embarquement_minutes INTEGER DEFAULT 5, -- Temps pour monter les passagers
-    date_mise_a_jour TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date_mise_a_jour DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -121,12 +121,12 @@ CREATE TABLE reservation (
     id_client INTEGER NOT NULL REFERENCES client(id_client),
     id_hotel INTEGER NOT NULL REFERENCES hotel(id_hotel),
     id_lieu_depart INTEGER NOT NULL REFERENCES lieu(id_lieu),
-    date_heure_souhaitee TIMESTAMP NOT NULL,
+    date_heure_souhaitee DATETIME NOT NULL,
     nombre_passagers INTEGER NOT NULL CHECK (nombre_passagers > 0),
     statut VARCHAR(30) DEFAULT 'en_attente', -- 'en_attente', 'planifiee', 'en_cours', 'terminee', 'annulee'
     commentaire TEXT,
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_modification DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index pour recherche rapide
