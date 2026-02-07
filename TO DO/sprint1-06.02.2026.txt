@@ -1,11 +1,25 @@
 TL: ETU003118
+Dev:ETU003209
+    ETU003111
 
-Dev
 BackOffice
-- feature/FormulaireReservation: ETU003209
--script insertion hotel: ETU003111
--feature/apiListeReservation :
--feature/filtreParDate :
+    - feature/FormulaireReservation: ETU003209
+    -script insertion hotel: ETU003111
+    -feature/apiListeReservation :ETU003209
+    -feature/filtreParDate :ETU003111
+    -fix/reservation-form:ETU003209
 FrontOffice
--feature/listeReservation :
--feaure/filtreParDate :
+-feature/listeReservation :ETU003209
+-feaure/filtreParDate :ETU003111
+
+Sprint 1 
+creation de table 
+-reservations  
+    idClient
+    nb_passager
+    date
+    heure arrivee
+    id_hotel
+-hotel
+    id_hotel   
+    nom
