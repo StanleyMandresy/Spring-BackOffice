@@ -9,9 +9,7 @@ import com.spring.BackOffice.model.Reservation;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,39 +25,33 @@ public class ReservationController {
     public ReservationController() {
         this.jdbcTemplate = JdbcTemplateProvider.getJdbcTemplate();
         if (this.jdbcTemplate == null) {
-            System.err.println("⚠️ ATTENTION: JdbcTemplate est null dans ReservationController !");
+            System.err.println("⚠️ JdbcTemplate null, reinitialisation...");
             JdbcTemplateProvider.reinitialize();
             this.jdbcTemplate = JdbcTemplateProvider.getJdbcTemplate();
         }
     }
 
     /**
-     * GET /reservation/form - Afficher le formulaire de réservation
+     * GET /reservation/form
      */
     @GetMapping("/reservation/form")
     public ModelView showReservationForm() {
         ModelView mv = new ModelView();
         mv.setView("reservation-form.jsp");
-        
+
         try {
-            if (jdbcTemplate != null) {
-                // Récupérer la liste des hôtels pour le menu déroulant
-                List<Hotel> hotels = Hotel.findAll(jdbcTemplate);
-                mv.addItem("hotels", hotels);
-                System.out.println("✅ " + hotels.size() + " hôtels chargés pour le formulaire");
-            } else {
-                mv.addItem("error", "Base de données non disponible");
-            }
+            List<Hotel> hotels = Hotel.findAll(jdbcTemplate);
+            mv.addItem("hotels", hotels);
         } catch (Exception e) {
             e.printStackTrace();
-            mv.addItem("error", "Erreur lors du chargement des hôtels: " + e.getMessage());
+            mv.addItem("error", "Erreur lors du chargement des hôtels");
         }
-        
+
         return mv;
     }
 
     /**
-     * POST /reservation/create - Créer une nouvelle réservation
+     * POST /reservation/create
      */
     @PostMapping("/reservation/create")
     public ModelView createReservation(
@@ -69,102 +61,83 @@ public class ReservationController {
             @RequestParam("commentaire") String commentaire,
             @RequestParam("dateArrivee") String dateArriveeStr,
             @RequestParam("heureArrivee") String heureArriveeStr) {
-        
+
         ModelView mv = new ModelView();
         mv.setView("reservation-confirmation.jsp");
-        
+
         try {
             if (jdbcTemplate == null) {
                 mv.addItem("error", "Base de données non disponible");
                 return mv;
             }
 
-            // Debug logs
-            System.out.println("📥 Paramètres reçus:");
-            System.out.println("  - idClient: " + idClient);
-            System.out.println("  - idHotel: " + idHotelStr);
-            System.out.println("  - nombrePassagers: " + nombrePassagersStr);
-            System.out.println("  - dateArrivee: " + dateArriveeStr);
-            System.out.println("  - heureArrivee: " + heureArriveeStr);
-            System.out.println("  - commentaire: " + commentaire);
-
-            // Conversion et validation
-            if (idHotelStr == null || idHotelStr.trim().isEmpty()) {
-                mv.addItem("error", "L'hôtel doit être sélectionné");
-                return mv;
-            }
-            if (nombrePassagersStr == null || nombrePassagersStr.trim().isEmpty()) {
-                mv.addItem("error", "Le nombre de passagers est obligatoire");
-                return mv;
-            }
-
+            // --------------------
+            // Validations
+            // --------------------
             Long idHotel = Long.parseLong(idHotelStr);
             Integer nombrePassagers = Integer.parseInt(nombrePassagersStr);
-            
-            // Conversion date et heure
-            Timestamp dateArrivee = null;
-            Time heureArrivee = null;
-            
-            if (dateArriveeStr != null && !dateArriveeStr.trim().isEmpty()) {
-                dateArrivee = Timestamp.valueOf(dateArriveeStr + " 00:00:00");
-            }
-            if (heureArriveeStr != null && !heureArriveeStr.trim().isEmpty()) {
-                heureArrivee = Time.valueOf(heureArriveeStr + ":00");
+
+            if (dateArriveeStr == null || heureArriveeStr == null ||
+                dateArriveeStr.isEmpty() || heureArriveeStr.isEmpty()) {
+                mv.addItem("error", "Date et heure obligatoires");
+                return mv;
             }
 
-            // Créer la réservation
-            Reservation reservation = new Reservation(idClient, idHotel, nombrePassagers, commentaire, dateArrivee, heureArrivee);
+            // --------------------
+            // Fusion date + heure
+            // --------------------
+            String dateTimeStr = dateArriveeStr + " " + heureArriveeStr + ":00";
+            Timestamp dateHeureArrive = Timestamp.valueOf(dateTimeStr);
+
+            // --------------------
+            // Création réservation
+            // --------------------
+            Reservation reservation = new Reservation(
+                    idClient,
+                    idHotel,
+                    nombrePassagers,
+                    commentaire,
+                    dateHeureArrive
+            );
+
             Long reservationId = reservation.save(jdbcTemplate);
-            
+
             if (reservationId != null) {
-                // Récupérer la réservation complète avec les infos de l'hôtel
-                Reservation savedReservation = Reservation.findById(jdbcTemplate, reservationId);
-                mv.addItem("reservation", savedReservation);
+                Reservation saved = Reservation.findById(jdbcTemplate, reservationId);
+                mv.addItem("reservation", saved);
                 mv.addItem("success", true);
-                mv.addItem("message", "Réservation créée avec succès !");
-                
-                System.out.println("✅ Réservation créée: ID=" + reservationId);
+                mv.addItem("message", "Réservation créée avec succès");
             } else {
-                mv.addItem("error", "Erreur lors de la création de la réservation");
+                mv.addItem("error", "Échec de la création de la réservation");
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
-            mv.addItem("error", "Erreur lors de la création de la réservation: " + e.getMessage());
+            mv.addItem("error", "Erreur : " + e.getMessage());
         }
-        
+
         return mv;
     }
 
     /**
-     * GET /reservation/list - Lister toutes les réservations (JSON)
+     * GET /reservation/list (JSON)
      */
     @RestAPI
     @GetMapping("/reservation/list")
     public JsonResponse listReservations() {
         try {
-            if (jdbcTemplate == null) {
-                Map<String, Object> errorData = new HashMap<>();
-                errorData.put("error", "Base de données non disponible");
-                return JsonResponse.error(500, errorData);
-            }
-
-            // Récupérer toutes les réservations
             List<Reservation> reservations = Reservation.findAll(jdbcTemplate);
-            
-            // Créer la réponse avec les métadonnées
-            Map<String, Object> responseData = new HashMap<>();
-            responseData.put("reservations", reservations);
-            responseData.put("total", reservations.size());
-            responseData.put("message", "Liste des réservations récupérée avec succès");
-            
-            System.out.println("✅ " + reservations.size() + " réservations chargées (JSON)");
-            return JsonResponse.success(responseData);
-            
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("reservations", reservations);
+            data.put("total", reservations.size());
+
+            return JsonResponse.success(data);
+
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> errorData = new HashMap<>();
-            errorData.put("error", "Erreur lors du chargement des réservations: " + e.getMessage());
+            errorData.put("error", "Erreur chargement réservations");
             return JsonResponse.error(500, errorData);
         }
     }

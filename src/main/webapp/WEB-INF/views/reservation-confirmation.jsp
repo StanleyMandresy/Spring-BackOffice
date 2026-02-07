@@ -187,18 +187,16 @@
                         <span class="info-label">Nombre de Passagers</span>
                         <span class="info-value"><%= reservation.getNombrePassagers() %> personne(s)</span>
                     </div>
-                    <% if (reservation.getDateArrivee() != null) { %>
+                                    <% if (reservation.getDateHeureArrive() != null) { %>
                     <div class="info-row">
-                        <span class="info-label">Date d'Arrivée</span>
-                        <span class="info-value"><%= new java.text.SimpleDateFormat("dd/MM/yyyy").format(reservation.getDateArrivee()) %></span>
+                        <span class="info-label">Arrivée</span>
+                        <span class="info-value">
+                            <%= new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm")
+                                .format(reservation.getDateHeureArrive()) %>
+                        </span>
                     </div>
                     <% } %>
-                    <% if (reservation.getHeureArrivee() != null) { %>
-                    <div class="info-row">
-                        <span class="info-label">Heure d'Arrivée</span>
-                        <span class="info-value"><%= reservation.getHeureArrivee() %></span>
-                    </div>
-                    <% } %>
+
                     <div class="info-row">
                         <span class="info-label">Statut</span>
                         <span class="info-value">

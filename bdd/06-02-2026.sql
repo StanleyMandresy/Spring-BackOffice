@@ -6,19 +6,21 @@ CREATE TABLE hotel (
     ville VARCHAR(100),
     prix_nuit NUMERIC(10,2),
     nombre_etoiles INTEGER CHECK (nombre_etoiles BETWEEN 1 AND 5),
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Créer ensuite la table reservation (table enfant avec clé étrangère)
+--07-02-2026 : modifie de la date_heure_arrivee de type DATETIME à TIMESTAMP pour une meilleure gestion des fuseaux horaires
 CREATE TABLE reservation (
     id_reservation SERIAL PRIMARY KEY,
     id_client VARCHAR(50) NOT NULL,
     id_hotel INTEGER NOT NULL REFERENCES hotel(id_hotel),
     nombre_passagers INTEGER NOT NULL CHECK (nombre_passagers > 0),
-    statut VARCHAR(30) DEFAULT 'en_attente', -- 'en_attente', 'planifiee', 'en_cours', 'terminee', 'annulee'
+    statut VARCHAR(30) DEFAULT 'en_attente',
     commentaire TEXT,
-    dateArrivee TIMESTAMP,
-    heureArrivee TIME,
+
+    date_heure_arrive TIMESTAMP NOT NULL,
+
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

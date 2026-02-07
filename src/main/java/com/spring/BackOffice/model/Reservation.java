@@ -8,7 +8,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -16,44 +15,48 @@ import java.util.List;
  * Modèle pour représenter une réservation
  */
 public class Reservation {
-    
+
     private Long idReservation;
     private String idClient;
     private Long idHotel;
     private Integer nombrePassagers;
-    private String statut; // 'en_attente', 'planifiee', 'en_cours', 'terminee', 'annulee'
+    private String statut; // en_attente, planifiee, en_cours, terminee, annulee
     private String commentaire;
-    private Timestamp dateArrivee;
-    private Time heureArrivee;
+
+    // 👉 UNE SEULE DATE/HEURE
+    private Timestamp dateHeureArrive;
+
     private Timestamp dateCreation;
     private Timestamp dateModification;
-    
-    // Champs additionnels pour affichage (jointure)
+
+    // Champs jointure
     private String nomHotel;
 
+    // -------------------
     // Constructeurs
+    // -------------------
     public Reservation() {}
 
-    public Reservation(String idClient, Long idHotel, Integer nombrePassagers, String commentaire, 
-                       Timestamp dateArrivee, Time heureArrivee) {
+    public Reservation(String idClient, Long idHotel, Integer nombrePassagers,
+                       String commentaire, Timestamp dateHeureArrive) {
         this.idClient = idClient;
         this.idHotel = idHotel;
         this.nombrePassagers = nombrePassagers;
         this.commentaire = commentaire;
-        this.dateArrivee = dateArrivee;
-        this.heureArrivee = heureArrivee;
-        this.statut = "en_attente"; // Statut par défaut
+        this.dateHeureArrive = dateHeureArrive;
+        this.statut = "en_attente";
     }
 
     // -------------------
-    // Méthodes statiques avec JdbcTemplate
+    // Méthodes JDBC
     // -------------------
-    
+
     /**
      * Récupérer toutes les réservations
      */
     public static List<Reservation> findAll(JdbcTemplate jdbcTemplate) {
-        String sql = "SELECT r.*, h.nom_hotel FROM reservation r " +
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
                      "ORDER BY r.date_creation DESC";
         return jdbcTemplate.query(sql, new ReservationRowMapper());
@@ -63,7 +66,8 @@ public class Reservation {
      * Récupérer les réservations d'un client
      */
     public static List<Reservation> findByClient(JdbcTemplate jdbcTemplate, String idClient) {
-        String sql = "SELECT r.*, h.nom_hotel FROM reservation r " +
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
                      "WHERE r.id_client = ? " +
                      "ORDER BY r.date_creation DESC";
@@ -74,49 +78,52 @@ public class Reservation {
      * Récupérer une réservation par ID
      */
     public static Reservation findById(JdbcTemplate jdbcTemplate, Long id) {
-        String sql = "SELECT r.*, h.nom_hotel FROM reservation r " +
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
                      "WHERE r.id_reservation = ?";
-        List<Reservation> reservations = jdbcTemplate.query(sql, new Object[]{id}, new ReservationRowMapper());
-        return reservations.isEmpty() ? null : reservations.get(0);
+        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{id}, new ReservationRowMapper());
+        return list.isEmpty() ? null : list.get(0);
     }
 
     /**
-     * Sauvegarder une nouvelle réservation
+     * Sauvegarder une réservation
      */
     public Long save(JdbcTemplate jdbcTemplate) {
-        if (this.idHotel == null) {
+
+        if (idClient == null || idClient.isEmpty())
+            throw new IllegalArgumentException("idClient invalide");
+
+        if (idHotel == null)
             throw new IllegalArgumentException("idHotel ne peut pas être null");
-        }
-        if (this.idClient == null || this.idClient.trim().isEmpty()) {
-            throw new IllegalArgumentException("idClient ne peut pas être vide");
-        }
-        if (this.nombrePassagers == null || this.nombrePassagers <= 0) {
-            throw new IllegalArgumentException("nombrePassagers doit être supérieur à 0");
-        }
-        
-        String sql = "INSERT INTO reservation (id_client, id_hotel, nombre_passagers, statut, commentaire, dateArrivee, heureArrivee) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        
+
+        if (nombrePassagers == null || nombrePassagers <= 0)
+            throw new IllegalArgumentException("nombrePassagers invalide");
+
+        if (dateHeureArrive == null)
+            throw new IllegalArgumentException("dateHeureArrive obligatoire");
+
+        String sql = "INSERT INTO reservation (id_client, id_hotel, nombre_passagers, statut, commentaire, date_heure_arrive) VALUES (?, ?, ?, ?, ?, ?)";
+
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        
+
         jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id_reservation"});
-            ps.setString(1, this.idClient);
-            ps.setLong(2, this.idHotel);
-            ps.setInt(3, this.nombrePassagers);
-            ps.setString(4, this.statut != null ? this.statut : "en_attente");
-            ps.setString(5, this.commentaire);
-            ps.setTimestamp(6, this.dateArrivee);
-            ps.setTime(7, this.heureArrivee);
+            PreparedStatement ps = connection.prepareStatement(
+                    sql, new String[]{"id_reservation"});
+            ps.setString(1, idClient);
+            ps.setLong(2, idHotel);
+            ps.setInt(3, nombrePassagers);
+            ps.setString(4, statut);
+            ps.setString(5, commentaire);
+            ps.setTimestamp(6, dateHeureArrive);
             return ps;
         }, keyHolder);
-        
+
         return keyHolder.getKey() != null ? keyHolder.getKey().longValue() : null;
     }
 
     /**
-     * Mettre à jour le statut d'une réservation
+     * Mettre à jour le statut
      */
     public static void updateStatut(JdbcTemplate jdbcTemplate, Long idReservation, String nouveauStatut) {
         String sql = "UPDATE reservation SET statut = ?, date_modification = CURRENT_TIMESTAMP WHERE id_reservation = ?";
@@ -124,37 +131,34 @@ public class Reservation {
     }
 
     // -------------------
-    // RowMapper pour JdbcTemplate
+    // RowMapper
     // -------------------
     private static class ReservationRowMapper implements RowMapper<Reservation> {
         @Override
         public Reservation mapRow(ResultSet rs, int rowNum) throws SQLException {
-            Reservation reservation = new Reservation();
-            reservation.setIdReservation(rs.getLong("id_reservation"));
-            reservation.setIdClient(rs.getString("id_client"));
-            reservation.setIdHotel(rs.getLong("id_hotel"));
-            reservation.setNombrePassagers(rs.getInt("nombre_passagers"));
-            reservation.setStatut(rs.getString("statut"));
-            reservation.setCommentaire(rs.getString("commentaire"));
-            reservation.setDateArrivee(rs.getTimestamp("datearrivee"));
-            reservation.setHeureArrivee(rs.getTime("heurearrivee"));
-            reservation.setDateCreation(rs.getTimestamp("date_creation"));
-            reservation.setDateModification(rs.getTimestamp("date_modification"));
-            
-            // Champ de la jointure
+            Reservation r = new Reservation();
+            r.setIdReservation(rs.getLong("id_reservation"));
+            r.setIdClient(rs.getString("id_client"));
+            r.setIdHotel(rs.getLong("id_hotel"));
+            r.setNombrePassagers(rs.getInt("nombre_passagers"));
+            r.setStatut(rs.getString("statut"));
+            r.setCommentaire(rs.getString("commentaire"));
+            r.setDateHeureArrive(rs.getTimestamp("date_heure_arrive"));
+            r.setDateCreation(rs.getTimestamp("date_creation"));
+            r.setDateModification(rs.getTimestamp("date_modification"));
+
             try {
-                reservation.setNomHotel(rs.getString("nom_hotel"));
-            } catch (SQLException e) {
-                // Pas de jointure, on ignore
-            }
-            
-            return reservation;
+                r.setNomHotel(rs.getString("nom_hotel"));
+            } catch (SQLException ignored) {}
+
+            return r;
         }
     }
 
     // -------------------
-    // Getters et setters
+    // Getters & Setters
     // -------------------
+
     public Long getIdReservation() { return idReservation; }
     public void setIdReservation(Long idReservation) { this.idReservation = idReservation; }
 
@@ -173,11 +177,8 @@ public class Reservation {
     public String getCommentaire() { return commentaire; }
     public void setCommentaire(String commentaire) { this.commentaire = commentaire; }
 
-    public Timestamp getDateArrivee() { return dateArrivee; }
-    public void setDateArrivee(Timestamp dateArrivee) { this.dateArrivee = dateArrivee; }
-
-    public Time getHeureArrivee() { return heureArrivee; }
-    public void setHeureArrivee(Time heureArrivee) { this.heureArrivee = heureArrivee; }
+    public Timestamp getDateHeureArrive() { return dateHeureArrive; }
+    public void setDateHeureArrive(Timestamp dateHeureArrive) { this.dateHeureArrive = dateHeureArrive; }
 
     public Timestamp getDateCreation() { return dateCreation; }
     public void setDateCreation(Timestamp dateCreation) { this.dateCreation = dateCreation; }
@@ -190,7 +191,13 @@ public class Reservation {
 
     @Override
     public String toString() {
-        return String.format("Reservation{id=%d, client='%s', hotel=%d, passagers=%d, statut='%s', dateArrivee=%s}", 
-            idReservation, idClient, idHotel, nombrePassagers, statut, dateArrivee);
+        return "Reservation{" +
+                "id=" + idReservation +
+                ", client='" + idClient + '\'' +
+                ", hotel=" + idHotel +
+                ", passagers=" + nombrePassagers +
+                ", statut='" + statut + '\'' +
+                ", dateHeureArrive=" + dateHeureArrive +
+                '}';
     }
 }
