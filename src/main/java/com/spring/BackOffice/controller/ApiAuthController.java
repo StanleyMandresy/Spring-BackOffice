@@ -4,11 +4,13 @@ import com.myframework.core.annotations.*;
 import com.myframework.core.JsonResponse;
 import com.spring.BackOffice.config.JdbcTemplateProvider;
 import com.spring.BackOffice.model.User;
+import com.spring.BackOffice.model.Voiture;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -202,6 +204,91 @@ public class ApiAuthController {
         }
         
         return JsonResponse.success(data);
+    }
+
+    /**
+     * GET /api/voitures - Lister toutes les voitures (authentification requise)
+     * 
+     * Test curl:
+     * curl "http://localhost:8080/sprint0/api/voitures" -b cookies.txt
+     */
+    @RestAPI
+    @GetMapping("/api/voitures")
+    @AllowAnonymous
+    public JsonResponse listVoitures(HttpSession session) {
+        try {
+            // Vérification manuelle de l'authentification
+            String username = (String) session.getAttribute("user");
+            
+            if (username == null) {
+                return JsonResponse.error(403, 
+                    createErrorData("Accès non autorisé. Vous devez être connecté pour voir les voitures."));
+            }
+
+            if (jdbcTemplate == null) {
+                return JsonResponse.error(500, 
+                    createErrorData("Erreur serveur: Base de données non disponible"));
+            }
+
+            // Récupérer toutes les voitures
+            List<Voiture> voitures = Voiture.findAll(jdbcTemplate);
+            
+            // Créer la réponse avec les métadonnées
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("voitures", voitures);
+            responseData.put("total", voitures.size());
+            responseData.put("message", "Liste des voitures récupérée avec succès");
+            
+            return JsonResponse.success(responseData);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return JsonResponse.error(500, 
+                createErrorData("Erreur lors de la récupération des voitures: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/voitures/mes-voitures - Lister les voitures de l'utilisateur connecté
+     * 
+     * Test curl:
+     * curl "http://localhost:8080/sprint0/api/voitures/mes-voitures" -b cookies.txt
+     */
+    @RestAPI
+    @GetMapping("/api/voitures/mes-voitures")
+    @AllowAnonymous
+    public JsonResponse listMesVoitures(HttpSession session) {
+        try {
+            // Vérification manuelle de l'authentification
+            String username = (String) session.getAttribute("user");
+            Long userId = (Long) session.getAttribute("userId");
+            
+            if (username == null || userId == null) {
+                return JsonResponse.error(403, 
+                    createErrorData("Accès non autorisé. Vous devez être connecté."));
+            }
+
+            if (jdbcTemplate == null) {
+                return JsonResponse.error(500, 
+                    createErrorData("Erreur serveur: Base de données non disponible"));
+            }
+
+            // Récupérer les voitures de l'utilisateur
+            List<Voiture> mesVoitures = Voiture.findByUserId(jdbcTemplate, userId);
+            
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("voitures", mesVoitures);
+            responseData.put("total", mesVoitures.size());
+            responseData.put("proprietaire", username);
+            responseData.put("message", "Vos voitures récupérées avec succès");
+            
+            return JsonResponse.success(responseData);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return JsonResponse.error(500, 
+                createErrorData("Erreur lors de la récupération de vos voitures: " + e.getMessage()));
+        }
     }
 
     /**
