@@ -7,6 +7,7 @@ import com.spring.BackOffice.model.Token;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,13 +61,26 @@ public class TokenController {
             Long tokenId = token.save(jdbcTemplate);
 
             if (tokenId != null) {
+                // Récupérer le token depuis la base pour s'assurer qu'on retourne exactement ce qui est stocké
+                Token tokenSauvegarde = Token.findByToken(jdbcTemplate, token.getToken());
+                
+                if (tokenSauvegarde == null) {
+                    // Si le token n'est pas trouvé, utiliser l'objet original
+                    tokenSauvegarde = token;
+                }
+                
+                // Formater la date d'expiration en chaîne lisible
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String expirationFormatee = sdf.format(tokenSauvegarde.getDateExpiration());
+                
                 Map<String, Object> data = new HashMap<>();
-                data.put("token", token.getToken());
-                data.put("expiration", token.getDateExpiration());
+                data.put("id", tokenSauvegarde.getId());
+                data.put("token", tokenSauvegarde.getToken());
+                data.put("expiration", expirationFormatee);
                 data.put("validite_jours", jours);
                 data.put("message", "Token généré avec succès. Conservez-le précieusement !");
                 
-                System.out.println("✅ Token généré: " + token.getToken());
+                System.out.println("✅ Token généré: " + tokenSauvegarde.getToken() + " (ID: " + tokenSauvegarde.getId() + ", expire: " + expirationFormatee + ")");
                 return JsonResponse.success(data);
             } else {
                 return JsonResponse.error(500, createErrorData("Erreur lors de la génération du token"));
@@ -104,7 +118,9 @@ public class TokenController {
             
             if (valide) {
                 Token token = Token.findByToken(jdbcTemplate, tokenValue);
-                data.put("expiration", token.getDateExpiration());
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String expirationFormatee = sdf.format(token.getDateExpiration());
+                data.put("expiration", expirationFormatee);
                 data.put("message", "Token valide");
                 return JsonResponse.success(data);
             } else {

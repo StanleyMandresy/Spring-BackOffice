@@ -41,9 +41,18 @@ public class Token {
      * Créer un token avec une durée de validité en jours
      */
     public static Token creerToken(int joursValidite) {
+        System.out.println("🔍 creerToken() appelé avec joursValidite = " + joursValidite);
+        
         String tokenValue = genererToken();
-        LocalDateTime expiration = LocalDateTime.now().plusDays(joursValidite);
+        LocalDateTime maintenant = LocalDateTime.now();
+        LocalDateTime expiration = maintenant.plusDays(joursValidite);
         Timestamp dateExpiration = Timestamp.valueOf(expiration);
+        
+        System.out.println("🔍 Token généré: " + tokenValue);
+        System.out.println("🔍 Date maintenant: " + maintenant);
+        System.out.println("🔍 Date expiration calculée (+"+joursValidite+" jours): " + expiration);
+        System.out.println("🔍 Timestamp final: " + dateExpiration);
+        
         return new Token(tokenValue, dateExpiration);
     }
 
@@ -51,6 +60,8 @@ public class Token {
      * Sauvegarder un token en base
      */
     public Long save(JdbcTemplate jdbcTemplate) {
+        System.out.println("💾 Début save() - Token: " + this.token + ", Expiration: " + this.dateExpiration);
+        
         String sql = "INSERT INTO token (token, date_expiration) VALUES (?, ?)";
         
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -59,11 +70,15 @@ public class Token {
             PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
             ps.setString(1, this.token);
             ps.setTimestamp(2, this.dateExpiration);
+            System.out.println("💾 PreparedStatement - Token: " + this.token + ", Expiration: " + this.dateExpiration);
             return ps;
         }, keyHolder);
         
         if (keyHolder.getKey() != null) {
             this.id = keyHolder.getKey().longValue();
+            System.out.println("💾 Token sauvegardé avec ID: " + this.id);
+        } else {
+            System.out.println("❌ Erreur: pas de clé générée");
         }
         
         return this.id;
