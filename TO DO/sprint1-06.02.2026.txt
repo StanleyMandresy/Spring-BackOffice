@@ -3,7 +3,7 @@ Dev:ETU003209
     ETU003111
 
 BackOffice
-    - feature/FormulaireReservation: ETU003209
+    -feature/FormulaireReservation: ETU003209
     -script insertion hotel: ETU003111
     -feature/apiListeReservation :ETU003209
     -feature/filtreParDate :ETU003111
