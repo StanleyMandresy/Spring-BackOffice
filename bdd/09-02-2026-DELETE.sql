@@ -5,10 +5,12 @@ TRUNCATE TABLE users RESTART IDENTITY CASCADE;
 
 -- 1. Insertion des hôtels (HOTEL table)
 INSERT INTO hotel (id_hotel, nom_hotel, ville) VALUES
-(1, 'Colbert', NULL),
-(2, 'Novotel', NULL),
-(3, 'Ibis', NULL),
-(4, 'Lokanga', NULL);
+(1,'AEROPORT', NULL),
+(2,'Colbert', NULL),
+(3,'Novotel', NULL),
+(4,'Ibis', NULL),
+(5,'Lokanga', NULL);
+
 
 -- 2. Insertion des réservations (RESERVATION table)
 INSERT INTO reservation (

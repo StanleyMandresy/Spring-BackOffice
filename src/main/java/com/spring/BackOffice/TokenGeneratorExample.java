@@ -89,7 +89,7 @@ public class TokenGeneratorExample {
         // Lister tous les tokens
         System.out.println("📋 Liste de tous les tokens en base");
         System.out.println("   List<Token> tokens = Token.findAll(jdbcTemplate);");
-        var tokens = Token.findAll(jdbcTemplate);
+        java.util.List<Token> tokens = Token.findAll(jdbcTemplate);
         System.out.println("   Total: " + tokens.size() + " token(s)");
         System.out.println();
         
