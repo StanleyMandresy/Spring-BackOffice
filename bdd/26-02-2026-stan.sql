@@ -85,3 +85,14 @@ INSERT INTO reservation (
 ) VALUES
 ('4631', 4, 11, '2026-02-26 10:01:00', 'en_attente', NULL),
 ('4394', 4, 1,  '2026-02-26 10:30:00', 'en_attente', NULL);
+
+INSERT INTO reservation (
+    id_client,
+    id_hotel,
+    nombre_passagers,
+    date_heure_arrive,
+    statut,
+    commentaire
+) VALUES
+('5001', 4, 4, '2026-02-27 10:00:00', 'en_attente', NULL),
+('5002', 2, 5,  '2026-02-27 10:20:00', 'en_attente', NULL);

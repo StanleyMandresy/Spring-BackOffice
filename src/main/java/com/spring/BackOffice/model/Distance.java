@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * Modèle représentant une distance entre deux hôtels
@@ -37,42 +38,38 @@ public class Distance {
     }
 
 
+public static Distance findByHotels(JdbcTemplate jdbcTemplate, long fromHotelId, long toHotelId) {
 
-    public static Distance findByHotels(JdbcTemplate jdbcTemplate, long fromHotelId, long toHotelId) {
+    // 1️⃣ Récupérer toutes les distances (graphe)
+    String sql = "SELECT from_depart, to_arrive, distance_km FROM distance";
+    List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
 
-        // 1️⃣ Récupérer toutes les distances (graphe)
-        String sql = "SELECT from_depart, to_arrive, distance_km FROM distance";
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
+    // construire le graphe
+    Map<Long, Map<Long, Double>> graphe = new HashMap<>();
+    for (Map<String, Object> row : rows) {
+        long from = ((Number) row.get("from_depart")).longValue();
+        long to = ((Number) row.get("to_arrive")).longValue();
+        double km = ((BigDecimal) row.get("distance_km")).doubleValue();
+        graphe.computeIfAbsent(from, k -> new HashMap<>()).put(to, km);
+    }
 
-        // construire le graphe
-        Map<Long, Map<Long, Double>> graphe = new HashMap<>();
-        for (Map<String, Object> row : rows) {
-            long from = ((Number) row.get("from_depart")).longValue();
-            long to = ((Number) row.get("to_arrive")).longValue();
-            double km = ((BigDecimal) row.get("distance_km")).doubleValue();
-
-            graphe.computeIfAbsent(from, k -> new HashMap<>()).put(to, km);
-        }
-
-        // 2️⃣ Initialisation Dijkstra
+    // 2️⃣ Fonction interne pour Dijkstra
+    BiFunction<Long, Long, Double> dijkstra = (start, end) -> {
         Set<Long> visited = new HashSet<>();
         Map<Long, Double> distances = new HashMap<>();
         for (Long hotelId : graphe.keySet()) distances.put(hotelId, Double.MAX_VALUE);
-        distances.put(fromHotelId, 0.0);
+        distances.put(start, 0.0);
 
-        Map<Long, Long> previous = new HashMap<>(); // pour reconstruire le chemin
         PriorityQueue<long[]> queue = new PriorityQueue<>(Comparator.comparingDouble(a -> a[1]));
-        queue.add(new long[]{fromHotelId, 0});
+        queue.add(new long[]{start, 0});
 
-        // 3️⃣ Boucle principale
         while (!queue.isEmpty()) {
             long[] current = queue.poll();
             long currentHotel = current[0];
             double currentDist = current[1];
 
             if (!visited.add(currentHotel)) continue;
-
-            if (currentHotel == toHotelId) break;
+            if (currentHotel == end) break;
 
             Map<Long, Double> voisins = graphe.getOrDefault(currentHotel, Collections.emptyMap());
             for (Map.Entry<Long, Double> entry : voisins.entrySet()) {
@@ -82,26 +79,42 @@ public class Distance {
                     double newDist = currentDist + km;
                     if (newDist < distances.getOrDefault(voisin, Double.MAX_VALUE)) {
                         distances.put(voisin, newDist);
-                        previous.put(voisin, currentHotel);
                         queue.add(new long[]{voisin, (long) newDist});
                     }
                 }
             }
         }
+        return distances.getOrDefault(end, Double.MAX_VALUE);
+    };
 
-        // 4️⃣ Vérifier si chemin trouvé
-        if (!distances.containsKey(toHotelId) || distances.get(toHotelId) == Double.MAX_VALUE) {
+    // 3️⃣ Calculer la distance
+    double distanceKm = dijkstra.apply(fromHotelId, toHotelId);
+
+    // 4️⃣ Si pas de chemin direct, essayer chemin inverse
+    boolean inverse = false;
+    if (distanceKm == Double.MAX_VALUE) {
+        double inverseDist = dijkstra.apply(toHotelId, fromHotelId);
+        if (inverseDist == Double.MAX_VALUE) {
             throw new RuntimeException("Aucun chemin trouvé entre " + fromHotelId + " et " + toHotelId);
         }
+        distanceKm = inverseDist;
+        inverse = true;
+    }
 
-        // 5️⃣ Retourner un objet Distance “factice”
-        Distance result = new Distance();
+    // 5️⃣ Retourner un objet Distance
+    Distance result = new Distance();
+    if (inverse) {
+        result.setFromDepart(Hotel.findById(jdbcTemplate, toHotelId));
+        result.setToArrive(Hotel.findById(jdbcTemplate, fromHotelId));
+    } else {
         result.setFromDepart(Hotel.findById(jdbcTemplate, fromHotelId));
         result.setToArrive(Hotel.findById(jdbcTemplate, toHotelId));
-        result.setDistanceKm(BigDecimal.valueOf(distances.get(toHotelId)));
-
-        return result;
     }
+    result.setDistanceKm(BigDecimal.valueOf(distanceKm));
+
+    return result;
+}
+    
 
 
     public void save(JdbcTemplate jdbcTemplate) {
