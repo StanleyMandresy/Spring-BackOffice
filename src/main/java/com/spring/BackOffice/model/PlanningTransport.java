@@ -197,6 +197,11 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             positionActuelle = Hotel.findById(jdbcTemplate, res.getIdHotel());
         }
     }
+     for (Reservation res : reservations) {
+        if (!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate, res.getIdReservation())) {
+            Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "annule");
+        }
+    }
 }
 public static List<PlanningTransport> findByDate(JdbcTemplate jdbcTemplate, LocalDate date) {
         String sql = "SELECT pt.*, r.id_client, r.id_hotel, r.nombre_passagers, r.commentaire, r.date_heure_arrive, h.nom_hotel, v.reference " +

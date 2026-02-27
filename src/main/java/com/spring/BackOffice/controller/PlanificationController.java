@@ -4,6 +4,7 @@ import com.myframework.core.annotations.*;
 import com.myframework.core.ModelView;
 import com.spring.BackOffice.config.JdbcTemplateProvider;
 import com.spring.BackOffice.model.PlanningTransport;
+import com.spring.BackOffice.model.Reservation;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -47,14 +48,15 @@ public class PlanificationController {
             LocalDate datePlan = LocalDate.parse(date); // "2026-02-05"
 
             PlanningTransport.planifierTransports(jdbcTemplate, datePlan);
+            List<Reservation> annuleList = Reservation.findByDateAnnuleList(jdbcTemplate, datePlan);
+           
 
             // Après planification, afficher le planning pour la date
             List<PlanningTransport> planningList = PlanningTransport.findByDate(jdbcTemplate, datePlan);
-            if(planningList.isEmpty()) {
-                mv.addItem("message", "Aucun transport planifié pour le " + datePlan);
-            }
+          
             mv.addItem("date", datePlan);
             mv.addItem("planningList", planningList);
+            mv.addItem("annuleList", annuleList);
             mv.setView("Planification/planification-details.jsp");
 
         } catch (Exception e) {

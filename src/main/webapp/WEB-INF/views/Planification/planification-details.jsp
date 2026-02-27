@@ -100,6 +100,33 @@
     </tbody>
 </table>
 
+<c:if test="${not empty annuleList}">
+    <h3 style="text-align:center; margin-top:40px;">Réservations annulées</h3>
+        <thead>
+            <tr>
+                <th>N°</th>
+                <th>Client</th>
+                <th>Hôtel</th>
+                <th>Passagers</th>
+                <th>Commentaire</th>
+            </tr>
+        </thead>
+        <tbody>
+        <c:forEach var="res" items="${annuleList}">
+            <tr>
+                <td><strong>#${res.idReservation}</strong></td>
+                <td>${res.idClient}</td>
+                <td>${res.nomHotel != null ? res.nomHotel : 'Hôtel #' + res.idHotel}</td>
+                <td>${res.nombrePassagers} pers.</td>
+                <td>${res.commentaire}</td>
+            </tr>
+        </c:forEach>
+        </tbody>
+    </table>
+</c:if>
+<c:if test="${ empty annuleList}">
+    <p style="text-align:center; margin-top:20px;">Aucune réservation annulée pour cette date.</p>
+</c:if>
 <a href="planification">Retour au formulaire</a>
 </body>
 </html>
