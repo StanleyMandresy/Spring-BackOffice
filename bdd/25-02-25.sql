@@ -5,17 +5,30 @@
 -- Table parametre: vitesse moyenne et temps d'attente
 CREATE TABLE parametre (
     id SERIAL PRIMARY KEY,
-    vitesse_kmh DECIMAL(5, 2) NOT NULL,        -- Vitesse en km/h
-    temps_attente_minute INTEGER NOT NULL      -- Temps d'attente en minute
+    vitesse_kmh DECIMAL(5,2) NOT NULL,
+    temps_attente_minute INTEGER NOT NULL
 );
 
 -- Table distance: distances entre lieux de départ et d'arrivée
+
 CREATE TABLE distance (
     id SERIAL PRIMARY KEY,
-    form_depart VARCHAR(100) NOT NULL,          -- Lieu de départ
-    to_arrive VARCHAR(100) NOT NULL,            -- Lieu d'arrivée
-    kilometre DECIMAL(6, 2) NOT NULL,           -- Distance en kilomètre
-    UNIQUE(form_depart, to_arrive)
+    from_depart INTEGER NOT NULL,
+    to_arrive INTEGER NOT NULL,
+    distance_km DECIMAL(6,2) NOT NULL,
+
+    CONSTRAINT fk_from_hotel
+        FOREIGN KEY (from_depart)
+        REFERENCES hotel(id_hotel)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_to_hotel
+        FOREIGN KEY (to_arrive)
+        REFERENCES hotel(id_hotel)
+        ON DELETE CASCADE,
+
+    CONSTRAINT unique_trajet UNIQUE (from_depart, to_arrive),
+    CONSTRAINT check_different_hotels CHECK (from_depart <> to_arrive)
 );
 
 -- ============================================
@@ -23,23 +36,17 @@ CREATE TABLE distance (
 -- ============================================
 
 INSERT INTO parametre (vitesse_kmh, temps_attente_minute) VALUES
-(40.00, 10),   -- Circulation urbaine
-(60.00, 5),    -- Route nationale
-(80.00, 2);    -- Route fluide
-
-INSERT INTO distance (form_depart, to_arrive, kilometre) VALUES
-('Antananarivo', 'Antsirabe', 169.00),
-('Antananarivo', 'Toamasina', 354.00),
-('Antananarivo', 'Mahajanga', 570.00),
-('Antsirabe', 'Fianarantsoa', 240.00),
-('Fianarantsoa', 'Toliara', 410.00),
-('Toamasina', 'Fenoarivo Atsinanana', 100.00),
-('Mahajanga', 'Ambato-Boeny', 90.00),
-('Antananarivo', 'Ambatolampy', 68.00);
+(40.00, 10);
 
 
-INSERT INTO vehicule 
-(immatriculation, marque, modele, capacite_passagers, id_type_carburation, id_chauffeur_attribue, annee_fabrication, actif, en_maintenance)
+INSERT INTO distance (from_depart, to_arrive, distance_km) VALUES
+(1, 2, 3.50),
+(2, 3, 5.00),
+(3, 4, 6.50),
+(4, 5, 10.80);
+
+INSERT INTO vehicule (reference, nbrPlace, type_carburant)
 VALUES
-('8382 TBA', 'Toyota', 'Land Cruiser', 7, 1, 1, 2018, TRUE, FALSE),
-('2498 TAA', 'Ford', 'Ranger', 5, 2, 2, 2020, TRUE, FALSE);
+('8382 TBA', 7, 'D'),
+('2498 TAA', 5, 'ES');
+
