@@ -8,6 +8,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -19,6 +21,8 @@ public class Vehicule {
     private String reference;
     private Integer nbrPlace;
     private String typeCarburant; // D, ES, S, E
+
+  
 
     // -------------------
     // Constructeurs
@@ -186,6 +190,36 @@ public class Vehicule {
             throw new IllegalArgumentException("Type de carburant invalide (D, ES, S, E)");
         }
         this.typeCarburant = typeCarburant; 
+    }
+
+
+
+    /**
+     * Vérifie si le véhicule est libre pour une arrivée donnée.
+     * <p>
+     * La méthode interroge la table planning_transport pour s'assurer qu'il n'existe
+     * pas de trajet planifié couvrant la date/heure demandée. Elle tient également
+     * compte de l'attribut temporaire {@code disponibleA} utilisé lors de la
+     * planification en mémoire.
+     *
+     * @param jdbcTemplate template JDBC pour l'accès à la base
+     * @param dateHeureArrive date/heure d'arrivée à vérifier
+     * @return {@code true} si aucun planning n'empêche l'utilisation du véhicule,
+     *         {@code false} sinon
+     */
+    public boolean isDisponible(JdbcTemplate jdbcTemplate, Timestamp dateHeureArrive) {
+        if (dateHeureArrive == null)
+            throw new IllegalArgumentException("dateHeureArrive requise");
+
+    
+
+        if (this.id == null)
+            return true; // pas encore persisté en base
+
+        String sql = "SELECT COUNT(*) FROM planning_transport " +
+                     "WHERE id_vehicule = ? AND ? BETWEEN heure_depart AND heure_retour";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, this.id, dateHeureArrive);
+        return count == null || count == 0;
     }
 
     @Override
