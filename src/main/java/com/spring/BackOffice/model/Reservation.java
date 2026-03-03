@@ -9,7 +9,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 
 /**
  * Modèle pour représenter une réservation
@@ -129,6 +130,26 @@ public class Reservation {
         String sql = "UPDATE reservation SET statut = ?, date_modification = CURRENT_TIMESTAMP WHERE id_reservation = ?";
         jdbcTemplate.update(sql, nouveauStatut, idReservation);
     }
+
+    public static List<Reservation> findByDate(JdbcTemplate jdbcTemplate, LocalDate date) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE DATE(r.date_heure_arrive) = ? ";
+        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
+        return list.isEmpty() ? null : list;
+    }
+
+     public static List<Reservation> findByDateAnnuleList(JdbcTemplate jdbcTemplate, LocalDate date) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = 'annule'";
+        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
+        return list.isEmpty() ? null : list;
+    }
+    
+    
 
     // -------------------
     // RowMapper

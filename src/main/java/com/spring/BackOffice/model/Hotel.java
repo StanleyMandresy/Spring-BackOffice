@@ -62,6 +62,12 @@ public class Hotel {
         return jdbcTemplate.query(sql, new Object[]{"%" + ville + "%"}, new HotelRowMapper());
     }
 
+     public static Hotel findByNom(JdbcTemplate jdbcTemplate, String nom) {
+        String sql = "SELECT * FROM hotel WHERE nom_hotel ILIKE ? ORDER BY nom_hotel";
+        List<Hotel> hotels = jdbcTemplate.query(sql, new Object[]{"%" + nom + "%"}, new HotelRowMapper());
+        return hotels.isEmpty() ? null : hotels.get(0); 
+    }
+
     /**
      * Sauvegarder un nouvel hôtel
      */
@@ -69,6 +75,8 @@ public class Hotel {
         String sql = "INSERT INTO hotel (nom_hotel, adresse, ville, prix_nuit, nombre_etoiles) VALUES (?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql, this.nomHotel, this.adresse, this.ville, this.prixNuit, this.nombreEtoiles);
     }
+
+    
 
     // -------------------
     // RowMapper pour JdbcTemplate
