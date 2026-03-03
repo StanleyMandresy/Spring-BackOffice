@@ -1,0 +1,5 @@
+CREATE TABLE token (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(100) NOT NULL UNIQUE,
+    date_expiration TIMESTAMP NOT NULL
+);

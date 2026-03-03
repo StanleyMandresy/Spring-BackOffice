@@ -6,7 +6,7 @@ CREATE TABLE hotel (
     ville VARCHAR(100),
     prix_nuit NUMERIC(10,2),
     nombre_etoiles INTEGER CHECK (nombre_etoiles BETWEEN 1 AND 5),
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Créer ensuite la table reservation (table enfant avec clé étrangère)

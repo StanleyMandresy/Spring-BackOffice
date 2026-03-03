@@ -3,10 +3,12 @@ package com.spring.BackOffice.controller;
 import com.myframework.core.annotations.*;
 import com.myframework.core.JsonResponse;
 import com.spring.BackOffice.config.JdbcTemplateProvider;
+import com.spring.BackOffice.model.Token;
 import com.spring.BackOffice.model.User;
 import com.spring.BackOffice.model.Voiture;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.HashMap;
@@ -29,6 +31,34 @@ public class ApiAuthController {
             JdbcTemplateProvider.reinitialize();
             this.jdbcTemplate = JdbcTemplateProvider.getJdbcTemplate();
         }
+    }
+
+    /**
+     * Vérifier le token d'API depuis le header Authorization ou paramètre ?token=
+     * Retourne null si valide, sinon retourne une JsonResponse d'erreur
+     */
+    private JsonResponse verifierToken(HttpServletRequest request, @RequestParam("token") String tokenParam) {
+        // Essayer de récupérer le token depuis le header Authorization
+        String authHeader = request.getHeader("Authorization");
+        String tokenValue = null;
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            tokenValue = authHeader.substring(7);
+        } else if (tokenParam != null && !tokenParam.trim().isEmpty()) {
+            // Sinon utiliser le paramètre ?token=
+            tokenValue = tokenParam;
+        }
+        
+        if (tokenValue == null || tokenValue.trim().isEmpty()) {
+            return JsonResponse.error(401, createErrorData("Token d'API requis. Utilisez 'Authorization: Bearer <token>' ou '?token=<token>'"));
+        }
+        
+        // Vérifier la validité du token
+        if (!Token.isTokenValide(jdbcTemplate, tokenValue)) {
+            return JsonResponse.error(401, createErrorData("Token invalide ou expiré"));
+        }
+        
+        return null; // Token valide
     }
 
     /**
@@ -207,22 +237,24 @@ public class ApiAuthController {
     }
 
     /**
-     * GET /api/voitures - Lister toutes les voitures (authentification requise)
+     * GET /api/voitures - Lister toutes les voitures (Token API requis)
      * 
-     * Test curl:
-     * curl "http://localhost:8080/sprint0/api/voitures" -b cookies.txt
+     * Test curl avec Authorization header:
+     * curl "http://localhost:8080/sprint0/api/voitures" -H "Authorization: Bearer <votre_token>"
+     * 
+     * Test curl avec paramètre:
+     * curl "http://localhost:8080/sprint0/api/voitures?token=<votre_token>"
      */
     @RestAPI
     @GetMapping("/api/voitures")
     @AllowAnonymous
-    public JsonResponse listVoitures(HttpSession session) {
+    public JsonResponse listVoitures(HttpServletRequest request, 
+                                     @RequestParam("token") String token) {
         try {
-            // Vérification manuelle de l'authentification
-            String username = (String) session.getAttribute("user");
-            
-            if (username == null) {
-                return JsonResponse.error(403, 
-                    createErrorData("Accès non autorisé. Vous devez être connecté pour voir les voitures."));
+            // Vérifier le token d'API
+            JsonResponse tokenError = verifierToken(request, token);
+            if (tokenError != null) {
+                return tokenError; // Token invalide ou manquant
             }
 
             if (jdbcTemplate == null) {
@@ -249,7 +281,8 @@ public class ApiAuthController {
     }
 
     /**
-     * GET /api/voitures/mes-voitures - Lister les voitures de l'utilisateur connecté
+     * GET /api/voitures/mes-voitures - Lister les voitures de l'utilisateur connecté (Session requise)
+     * Note: Cet endpoint utilise toujours la session car il nécessite l'ID utilisateur
      * 
      * Test curl:
      * curl "http://localhost:8080/sprint0/api/voitures/mes-voitures" -b cookies.txt

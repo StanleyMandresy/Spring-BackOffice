@@ -1,0 +1,71 @@
+TL : ETU003111
+Dev : ETU003209
+      ETU003118
+
+
+BackOffice
+
+    =========================
+    1. FEATURE – VEHICULE
+    =========================
+    - feature/entiteVehicule : ETU003209
+    - feature/enumTypeCarburant : ETU003118
+    - feature/repositoryVehicule : ETU003209
+    - feature/serviceVehicule (ajouter, lister, modifier, supprimer) : ETU003118
+    - feature/controllerVehicule (POST, GET, PUT, DELETE) : ETU003209
+
+    =========================
+    2. FEATURE – TOKEN
+    =========================
+    - script/tableToken : ETU003118
+    - feature/entiteToken : ETU003209
+    - feature/tokenRepository : ETU003118
+    - feature/mainInsertionToken : ETU003209
+    - feature/generationTokenTest : ETU003118
+    - feature/dateExpirationToken : ETU003209
+
+
+    =========================
+    3. FEATURE – SECURISATION API
+    =========================
+    - feature/verifierToken : ETU003209
+    - feature/securisationApiReservation : ETU003118
+    - feature/securisationApiVehicule : ETU003209
+    - fix/retour401TokenInvalide : ETU003118
+
+
+
+FrontOffice
+
+    =========================
+    4. TOKEN – INTEGRATION
+    =========================
+    - feature/configToken : ETU003209
+    - feature/headerAuthorization : ETU003118
+    - test/apiSansToken : ETU003209
+    - test/apiAvecTokenValide : ETU003118
+    - test/tokenExpire : ETU003209
+
+
+creation de table
+
+-token
+    id
+    token (14 caracteres)
+    dateExpiration
+-Vehicule 
+    id
+    reference (unique) 
+    nbrPlace    
+    typeCarburant (D, Es, H, El) [ ] 
+-l’enum TypeCarburant - D - Es - H - El
+
+
+Tests
+
+    - test/ajoutVehicule
+    - test/modificationVehicule
+    - test/suppressionVehicule
+    - test/securiteApi
+    - test/gestionErreurs
+
