@@ -136,8 +136,7 @@ public class Reservation {
                      "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
                      "WHERE DATE(r.date_heure_arrive) = ? ";
-        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
-        return list.isEmpty() ? null : list;
+        return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
     }
 
      public static List<Reservation> findByDateAnnuleList(JdbcTemplate jdbcTemplate, LocalDate date) {
@@ -145,8 +144,7 @@ public class Reservation {
                      "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
                      "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = 'annule'";
-        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
-        return list.isEmpty() ? null : list;
+        return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
     }
     
     
