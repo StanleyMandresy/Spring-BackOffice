@@ -36,7 +36,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -154,7 +154,7 @@
         .table-row:hover {
             transform: translateX(10px);
             background: linear-gradient(90deg, rgba(181, 201, 154, 0.15), transparent) !important;
-            box-shadow: -4px 0 0 0 #87986A;
+            box-shadow: -4px 0 0 0 #1A3D63;
         }
 
         /* Badge animations */
@@ -175,7 +175,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -187,22 +187,22 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #E9F5DB;
+            background: #F6FAFD;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #87986A, #97A97C);
+            background: linear-gradient(180deg, #1A3D63, #4A7FA7);
             border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #718355, #87986A);
+            background: linear-gradient(180deg, #1A3D63, #1A3D63);
         }
 
         /* Button magical effect */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -273,7 +273,7 @@
             <div class="glass-card rounded-3xl shadow-2xl overflow-hidden">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-8 md:p-12">
+                <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-8 md:p-12">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="text-center md:text-left fade-in-down">
                             <div class="text-5xl mb-3 floating inline-block">📋</div>
@@ -315,7 +315,7 @@
                                 <option value="terminee">Terminée</option>
                                 <option value="annulee">Annulée</option>
                             </select>
-                            <button class="btn btn-outline border-white text-white hover:bg-white hover:text-[#87986A]" onclick="resetFilters()">
+                            <button class="btn btn-outline border-white text-white hover:bg-white hover:text-[#1A3D63]" onclick="resetFilters()">
                                 <i class="fas fa-redo"></i>
                             </button>
                         </div>
@@ -351,13 +351,13 @@
                         <!-- Statistics Cards -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
                             <!-- Total -->
-                            <div class="stat bg-gradient-to-br from-[#E9F5DB] to-[#CFE1B9] rounded-2xl shadow-xl border-2 stat-card-hover fade-in-up" style="border-color: #B5C99A; animation-delay: 0.1s">
-                                <div class="stat-figure" style="color: #87986A;">
+                            <div class="stat bg-gradient-to-br from-[#F6FAFD] to-[#B3CFE5] rounded-2xl shadow-xl border-2 stat-card-hover fade-in-up" style="border-color: #4A7FA7; animation-delay: 0.1s">
+                                <div class="stat-figure" style="color: #1A3D63;">
                                     <i class="fas fa-list-alt text-4xl"></i>
                                 </div>
-                                <div class="stat-title font-bold" style="color: #718355;">Total</div>
+                                <div class="stat-title font-bold" style="color: #1A3D63;">Total</div>
                                 <div class="stat-value count-animation gradient-text"><%= total %></div>
-                                <div class="stat-desc font-semibold" style="color: #87986A;">Réservations</div>
+                                <div class="stat-desc font-semibold" style="color: #1A3D63;">Réservations</div>
                             </div>
 
                             <!-- En Attente -->
@@ -381,20 +381,20 @@
                             </div>
 
                             <!-- Terminées -->
-                            <div class="stat bg-gradient-to-br from-[#CFE1B9] to-[#B5C99A] rounded-2xl shadow-xl border-2 stat-card-hover fade-in-up" style="border-color: #97A97C; animation-delay: 0.4s">
-                                <div class="stat-figure" style="color: #718355;">
+                            <div class="stat bg-gradient-to-br from-[#B3CFE5] to-[#4A7FA7] rounded-2xl shadow-xl border-2 stat-card-hover fade-in-up" style="border-color: #4A7FA7; animation-delay: 0.4s">
+                                <div class="stat-figure" style="color: #1A3D63;">
                                     <i class="fas fa-check-double text-4xl"></i>
                                 </div>
-                                <div class="stat-title font-bold" style="color: #718355;">Terminées</div>
-                                <div class="stat-value count-animation" style="color: #718355;"><%= terminees %></div>
-                                <div class="stat-desc font-semibold" style="color: #87986A;">Complétées</div>
+                                <div class="stat-title font-bold" style="color: #1A3D63;">Terminées</div>
+                                <div class="stat-value count-animation" style="color: #1A3D63;"><%= terminees %></div>
+                                <div class="stat-desc font-semibold" style="color: #1A3D63;">Complétées</div>
                             </div>
                         </div>
 
                         <!-- Table Container -->
                         <div class="overflow-x-auto rounded-2xl shadow-2xl fade-in-up" style="animation-delay: 0.5s">
                             <table class="table table-zebra w-full">
-                                <thead class="bg-gradient-to-r from-[#B5C99A] to-[#97A97C]">
+                                <thead class="bg-gradient-to-r from-[#4A7FA7] to-[#4A7FA7]">
                                     <tr class="text-white">
                                         <th class="text-base">
                                             <i class="bi bi-hash"></i> N°
@@ -440,13 +440,13 @@
                                             }
                                     %>
                                     <tr class="table-row hover" data-status="<%= res.getStatut() %>" style="animation-delay: <%= (rowIndex * 0.05) %>s">
-                                        <td class="font-bold text-lg" style="color: #718355;">
+                                        <td class="font-bold text-lg" style="color: #1A3D63;">
                                             #<%= res.getIdReservation() %>
                                         </td>
                                         <td>
                                             <div class="flex items-center gap-3">
                                                 <div class="avatar placeholder">
-                                                    <div class="bg-gradient-to-br from-[#B5C99A] to-[#97A97C] text-white rounded-full w-12 h-12 flex items-center justify-center">
+                                                    <div class="bg-gradient-to-br from-[#4A7FA7] to-[#4A7FA7] text-white rounded-full w-12 h-12 flex items-center justify-center">
                                                         <span class="text-xl font-bold"><%= res.getIdClient().substring(0, 1).toUpperCase() %></span>
                                                     </div>
                                                 </div>
@@ -460,7 +460,7 @@
                                         </td>
                                         <td>
                                             <div class="font-semibold text-gray-800">
-                                                <i class="fas fa-hotel" style="color: #87986A;"></i>
+                                                <i class="fas fa-hotel" style="color: #1A3D63;"></i>
                                                 <%= res.getNomHotel() != null ? res.getNomHotel() : "Hôtel #" + res.getIdHotel() %>
                                             </div>
                                             <div class="text-sm text-gray-500">
@@ -469,7 +469,7 @@
                                         </td>
                                         <td>
                                             <div class="flex items-center gap-2">
-                                                <div class="badge badge-lg" style="background: #E9F5DB; color: #718355; border: 2px solid #B5C99A;">
+                                                <div class="badge badge-lg" style="background: #F6FAFD; color: #1A3D63; border: 2px solid #4A7FA7;">
                                                     <i class="bi bi-people-fill mr-1"></i>
                                                     <%= res.getNombrePassagers() %> pers.
                                                 </div>
@@ -493,10 +493,10 @@
                                         </td>
                                         <td>
                                             <div class="flex gap-2">
-                                                <button class="btn btn-sm btn-circle" style="background: #87986A; color: white;" title="Voir détails">
+                                                <button class="btn btn-sm btn-circle" style="background: #1A3D63; color: white;" title="Voir détails">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-circle btn-outline" style="border-color: #87986A; color: #87986A;" title="Modifier">
+                                                <button class="btn btn-sm btn-circle btn-outline" style="border-color: #1A3D63; color: #1A3D63;" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-circle btn-error btn-outline" title="Supprimer">
@@ -516,11 +516,11 @@
                         <!-- Pagination -->
                         <div class="flex justify-center mt-8 fade-in-up" style="animation-delay: 0.6s">
                             <div class="btn-group">
-                                <button class="btn" style="background: #E9F5DB; color: #718355; border-color: #B5C99A;">«</button>
-                                <button class="btn" style="background: #87986A; color: white;">1</button>
-                                <button class="btn" style="background: #E9F5DB; color: #718355; border-color: #B5C99A;">2</button>
-                                <button class="btn" style="background: #E9F5DB; color: #718355; border-color: #B5C99A;">3</button>
-                                <button class="btn" style="background: #E9F5DB; color: #718355; border-color: #B5C99A;">»</button>
+                                <button class="btn" style="background: #F6FAFD; color: #1A3D63; border-color: #4A7FA7;">«</button>
+                                <button class="btn" style="background: #1A3D63; color: white;">1</button>
+                                <button class="btn" style="background: #F6FAFD; color: #1A3D63; border-color: #4A7FA7;">2</button>
+                                <button class="btn" style="background: #F6FAFD; color: #1A3D63; border-color: #4A7FA7;">3</button>
+                                <button class="btn" style="background: #F6FAFD; color: #1A3D63; border-color: #4A7FA7;">»</button>
                             </div>
                         </div>
 

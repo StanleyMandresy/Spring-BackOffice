@@ -8,7 +8,7 @@
         left: 0;
         height: 100vh;
         width: 280px;
-        background: linear-gradient(180deg, #B5C99A 0%, #97A97C 50%, #87986A 100%);
+        background: linear-gradient(180deg, #4A7FA7 0%, #4A7FA7 50%, #1A3D63 100%);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
@@ -135,7 +135,7 @@
         top: 20px;
         left: 20px;
         z-index: 1001;
-        background: linear-gradient(135deg, #87986A, #718355);
+        background: linear-gradient(135deg, #1A3D63, #1A3D63);
         color: white;
         border: none;
         padding: 12px 15px;

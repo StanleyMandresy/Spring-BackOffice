@@ -33,7 +33,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -130,13 +130,13 @@
         .table-row:hover {
             transform: translateX(10px);
             background: linear-gradient(90deg, rgba(181, 201, 154, 0.15), transparent) !important;
-            box-shadow: -4px 0 0 0 #87986A;
+            box-shadow: -4px 0 0 0 #1A3D63;
         }
 
         /* Button magical */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -164,7 +164,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -176,11 +176,11 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #E9F5DB;
+            background: #F6FAFD;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #87986A, #97A97C);
+            background: linear-gradient(180deg, #1A3D63, #4A7FA7);
             border-radius: 10px;
         }
 
@@ -236,7 +236,7 @@
             <div class="glass-card rounded-3xl shadow-2xl overflow-hidden">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-8 md:p-12">
+                <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-8 md:p-12">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="text-center md:text-left fade-in-down">
                             <div class="text-5xl mb-3 floating inline-block">🗓️</div>
@@ -262,11 +262,11 @@
                     
                     <!-- Statistics -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 fade-in-up" style="animation-delay: 0.1s">
-                        <div class="stat bg-gradient-to-br from-[#E9F5DB] to-[#CFE1B9] rounded-2xl shadow-xl border-2" style="border-color: #B5C99A;">
-                            <div class="stat-figure" style="color: #87986A;">
+                        <div class="stat bg-gradient-to-br from-[#F6FAFD] to-[#B3CFE5] rounded-2xl shadow-xl border-2" style="border-color: #4A7FA7;">
+                            <div class="stat-figure" style="color: #1A3D63;">
                                 <i class="fas fa-car text-4xl"></i>
                             </div>
-                            <div class="stat-title font-bold" style="color: #718355;">Véhicules</div>
+                            <div class="stat-title font-bold" style="color: #1A3D63;">Véhicules</div>
                             <div class="stat-value gradient-text">
                                 <c:set var="vehicleCount" value="0"/>
                                 <c:forEach var="p" items="${planningList}">
@@ -327,7 +327,7 @@
 
                         <div class="overflow-x-auto rounded-2xl shadow-2xl fade-in-up" style="animation-delay: 0.3s">
                             <table class="table table-zebra w-full">
-                                <thead class="bg-gradient-to-r from-[#B5C99A] to-[#97A97C]">
+                                <thead class="bg-gradient-to-r from-[#4A7FA7] to-[#4A7FA7]">
                                     <tr class="text-white">
                                         <th class="text-base">
                                             <i class="bi bi-car-front"></i> Véhicule
@@ -351,11 +351,11 @@
                                         <tr class="table-row hover" style="animation-delay: ${status.index * 0.05}s">
                                             <td>
                                                 <div class="flex items-center gap-3">
-                                                    <div class="text-3xl" style="color: #87986A;">
+                                                    <div class="text-3xl" style="color: #1A3D63;">
                                                         🚗
                                                     </div>
                                                     <div>
-                                                        <div class="font-bold text-lg" style="color: #718355;">${p.vehicule.reference}</div>
+                                                        <div class="font-bold text-lg" style="color: #1A3D63;">${p.vehicule.reference}</div>
                                                         <div class="text-sm text-gray-500">
                                                             <i class="bi bi-people-fill"></i> ${p.vehicule.nbrPlace} places
                                                         </div>
@@ -367,13 +367,13 @@
                                                     <c:when test="${p.reservation != null}">
                                                         <div class="flex flex-col gap-1">
                                                             <div class="font-semibold text-gray-800">
-                                                                <i class="fas fa-user" style="color: #87986A;"></i>
+                                                                <i class="fas fa-user" style="color: #1A3D63;"></i>
                                                                 ${p.reservation.idClient}
                                                             </div>
                                                             <div class="text-sm text-gray-600">
                                                                 <i class="fas fa-hotel"></i> Hôtel ${p.reservation.idHotel}
                                                             </div>
-                                                            <div class="badge badge-sm" style="background: #E9F5DB; color: #718355; border: 2px solid #B5C99A;">
+                                                            <div class="badge badge-sm" style="background: #F6FAFD; color: #1A3D63; border: 2px solid #4A7FA7;">
                                                                 <i class="bi bi-people"></i> ${p.reservation.nombrePassagers} passagers
                                                             </div>
                                                         </div>
@@ -384,13 +384,13 @@
                                                 </c:choose>
                                             </td>
                                             <td>
-                                                <div class="badge badge-lg badge-custom" style="background: #87986A; color: white;">
+                                                <div class="badge badge-lg badge-custom" style="background: #1A3D63; color: white;">
                                                     <i class="fas fa-clock"></i>
                                                     ${p.heureDepart}
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="badge badge-lg" style="background: #B5C99A; color: white;">
+                                                <div class="badge badge-lg" style="background: #4A7FA7; color: white;">
                                                     <i class="fas fa-hotel"></i>
                                                     ${p.heureArrive}
                                                 </div>
@@ -398,7 +398,7 @@
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${p.heureRetour != null}">
-                                                        <div class="badge badge-lg" style="background: #97A97C; color: white;">
+                                                        <div class="badge badge-lg" style="background: #4A7FA7; color: white;">
                                                             <i class="fas fa-plane-departure"></i>
                                                             ${p.heureRetour}
                                                         </div>

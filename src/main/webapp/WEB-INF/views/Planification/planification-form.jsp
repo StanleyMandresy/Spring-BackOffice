@@ -32,7 +32,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -123,7 +123,7 @@
         /* Button magical */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -151,7 +151,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -163,18 +163,18 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #E9F5DB;
+            background: #F6FAFD;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #87986A, #97A97C);
+            background: linear-gradient(180deg, #1A3D63, #4A7FA7);
             border-radius: 10px;
         }
 
         /* Input glow */
         .input-glow:focus {
             box-shadow: 0 0 30px rgba(135, 152, 106, 0.5);
-            border-color: #87986A !important;
+            border-color: #1A3D63 !important;
         }
 
         /* Shine effect */
@@ -227,7 +227,7 @@
             <div class="glass-card rounded-3xl shadow-2xl overflow-hidden fade-in-up">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-8 md:p-12">
+                <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-8 md:p-12">
                     <div class="text-center fade-in-down">
                         <div class="text-8xl mb-4 floating inline-block">📅</div>
                         <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-3 drop-shadow-2xl">
@@ -273,12 +273,12 @@
                                 <form action="${pageContext.request.contextPath}/planification/planifier" method="post" id="planningForm" class="space-y-6">
                                     <div class="form-control">
                                         <label class="label">
-                                            <span class="label-text font-bold text-xl" style="color: #718355;">
+                                            <span class="label-text font-bold text-xl" style="color: #1A3D63;">
                                                 <i class="fas fa-calendar-alt"></i> Date du Planning
                                             </span>
                                         </label>
                                         <div class="relative">
-                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-3xl" style="color: #87986A;">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-3xl" style="color: #1A3D63;">
                                                 <i class="bi bi-calendar-event"></i>
                                             </span>
                                             <input 
@@ -287,7 +287,7 @@
                                                 name="date" 
                                                 class="input input-bordered w-full pl-16 text-lg font-semibold input-glow"
                                                 required
-                                                style="border: 3px solid #B5C99A; height: 60px;"
+                                                style="border: 3px solid #4A7FA7; height: 60px;"
                                             />
                                         </div>
                                         <div class="label">
@@ -317,7 +317,7 @@
                                 <div class="flex items-start gap-4">
                                     <div class="text-5xl">🚗</div>
                                     <div>
-                                        <h4 class="font-bold text-lg mb-2" style="color: #718355;">Attribution Automatique</h4>
+                                        <h4 class="font-bold text-lg mb-2" style="color: #1A3D63;">Attribution Automatique</h4>
                                         <p class="text-gray-600">Les véhicules sont assignés automatiquement selon la capacité et la disponibilité</p>
                                     </div>
                                 </div>
@@ -327,7 +327,7 @@
                                 <div class="flex items-start gap-4">
                                     <div class="text-5xl">⏰</div>
                                     <div>
-                                        <h4 class="font-bold text-lg mb-2" style="color: #718355;">Horaires Optimisés</h4>
+                                        <h4 class="font-bold text-lg mb-2" style="color: #1A3D63;">Horaires Optimisés</h4>
                                         <p class="text-gray-600">Calcul intelligent des heures de départ, arrivée et retour pour chaque trajet</p>
                                     </div>
                                 </div>
@@ -337,7 +337,7 @@
                                 <div class="flex items-start gap-4">
                                     <div class="text-5xl">📊</div>
                                     <div>
-                                        <h4 class="font-bold text-lg mb-2" style="color: #718355;">Vue d'Ensemble</h4>
+                                        <h4 class="font-bold text-lg mb-2" style="color: #1A3D63;">Vue d'Ensemble</h4>
                                         <p class="text-gray-600">Visualisez toutes les réservations et annulations en un coup d'œil</p>
                                     </div>
                                 </div>
@@ -347,7 +347,7 @@
                                 <div class="flex items-start gap-4">
                                     <div class="text-5xl">✅</div>
                                     <div>
-                                        <h4 class="font-bold text-lg mb-2" style="color: #718355;">Gestion Simplifiée</h4>
+                                        <h4 class="font-bold text-lg mb-2" style="color: #1A3D63;">Gestion Simplifiée</h4>
                                         <p class="text-gray-600">Interface claire pour gérer efficacement votre flotte de transport</p>
                                     </div>
                                 </div>

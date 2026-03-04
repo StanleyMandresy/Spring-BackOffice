@@ -35,7 +35,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -97,8 +97,8 @@
             position: relative;
             border-radius: 50%;
             box-sizing: content-box;
-            border: 4px solid #87986A;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 100%);
+            border: 4px solid #1A3D63;
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 100%);
         }
 
         .success-checkmark .check-icon::before {
@@ -120,7 +120,7 @@
 
         .success-checkmark .check-icon .icon-line {
             height: 5px;
-            background-color: #87986A;
+            background-color: #1A3D63;
             display: block;
             border-radius: 2px;
             position: absolute;
@@ -215,7 +215,7 @@
             transform: translateY(-50%);
             width: 4px;
             height: 0;
-            background: linear-gradient(180deg, #87986A, #97A97C);
+            background: linear-gradient(180deg, #1A3D63, #4A7FA7);
             transition: height 0.3s ease;
             border-radius: 2px;
         }
@@ -265,7 +265,7 @@
 
         /* Custom badge styles */
         .custom-badge {
-            background: linear-gradient(135deg, #87986A 0%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #4A7FA7 100%);
             color: white;
             padding: 8px 20px;
             border-radius: 50px;
@@ -295,7 +295,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -304,7 +304,7 @@
         /* Button hover effects */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -370,7 +370,7 @@
                 <div class="glass-card-solid rounded-3xl shadow-2xl overflow-hidden card-3d fade-in-up" style="animation-delay: 0.1s">
                     
                     <!-- Header with animated success icon -->
-                    <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-12 text-center relative overflow-hidden">
+                    <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-12 text-center relative overflow-hidden">
                         <!-- Animated background circles -->
                         <div class="absolute top-0 left-0 w-72 h-72 bg-white opacity-10 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
                         <div class="absolute bottom-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full translate-x-1/3 translate-y-1/3"></div>
@@ -405,7 +405,7 @@
                         
                         <!-- Reservation Number - Highlighted -->
                         <div class="text-center mb-10 fade-in-up" style="animation-delay: 0.2s">
-                            <div class="inline-block bg-gradient-to-r from-[#E9F5DB] to-[#CFE1B9] px-8 py-4 rounded-2xl border-2 shadow-lg" style="border-color: #B5C99A;">
+                            <div class="inline-block bg-gradient-to-r from-[#F6FAFD] to-[#B3CFE5] px-8 py-4 rounded-2xl border-2 shadow-lg" style="border-color: #4A7FA7;">
                                 <p class="text-sm text-gray-600 font-medium mb-1">
                                     <i class="bi bi-hash"></i> Numéro de Réservation
                                 </p>
@@ -419,22 +419,22 @@
                         <div class="grid md:grid-cols-2 gap-6 mb-8">
                             
                             <!-- Client Info Card -->
-                            <div class="card bg-gradient-to-br from-[#E9F5DB] to-[#CFE1B9] shadow-xl border-2 fade-in-up shine" style="border-color: #B5C99A; animation-delay: 0.3s">
+                            <div class="card bg-gradient-to-br from-[#F6FAFD] to-[#B3CFE5] shadow-xl border-2 fade-in-up shine" style="border-color: #4A7FA7; animation-delay: 0.3s">
                                 <div class="card-body">
-                                    <h3 class="card-title" style="color: #718355;">
+                                    <h3 class="card-title" style="color: #1A3D63;">
                                         <i class="fas fa-user-circle text-2xl"></i>
                                         Informations Client
                                     </h3>
                                     <div class="space-y-3 mt-4">
                                         <div class="info-item flex items-center gap-3 p-3 rounded-lg">
-                                            <i class="bi bi-person-badge text-xl" style="color: #87986A;"></i>
+                                            <i class="bi bi-person-badge text-xl" style="color: #1A3D63;"></i>
                                             <div>
                                                 <p class="text-xs text-gray-600 font-medium">Identifiant</p>
                                                 <p class="text-lg font-bold text-gray-800"><%= reservation.getIdClient() %></p>
                                             </div>
                                         </div>
                                         <div class="info-item flex items-center gap-3 p-3 rounded-lg">
-                                            <i class="bi bi-people-fill text-xl" style="color: #87986A;"></i>
+                                            <i class="bi bi-people-fill text-xl" style="color: #1A3D63;"></i>
                                             <div>
                                                 <p class="text-xs text-gray-600 font-medium">Passagers</p>
                                                 <p class="text-lg font-bold text-gray-800"><%= reservation.getNombrePassagers() %> personne(s)</p>
@@ -445,15 +445,15 @@
                             </div>
 
                             <!-- Hotel Info Card -->
-                            <div class="card bg-gradient-to-br from-[#CFE1B9] to-[#B5C99A] shadow-xl border-2 fade-in-up shine" style="border-color: #97A97C; animation-delay: 0.4s">
+                            <div class="card bg-gradient-to-br from-[#B3CFE5] to-[#4A7FA7] shadow-xl border-2 fade-in-up shine" style="border-color: #4A7FA7; animation-delay: 0.4s">
                                 <div class="card-body">
-                                    <h3 class="card-title" style="color: #718355;">
+                                    <h3 class="card-title" style="color: #1A3D63;">
                                         <i class="fas fa-hotel text-2xl"></i>
                                         Hôtel Sélectionné
                                     </h3>
                                     <div class="space-y-3 mt-4">
                                         <div class="info-item flex items-center gap-3 p-3 rounded-lg">
-                                            <i class="bi bi-building text-xl" style="color: #87986A;"></i>
+                                            <i class="bi bi-building text-xl" style="color: #1A3D63;"></i>
                                             <div>
                                                 <p class="text-xs text-gray-600 font-medium">Établissement</p>
                                                 <p class="text-lg font-bold text-gray-800">
@@ -481,13 +481,13 @@
 
                         <!-- Arrival Information -->
                         <% if (reservation.getDateHeureArrive() != null) { %>
-                        <div class="alert bg-gradient-to-r from-[#E9F5DB] to-[#CFE1B9] border-2 shadow-lg mb-8 fade-in-up" style="border-color: #B5C99A; animation-delay: 0.5s">
-                            <i class="fas fa-calendar-alt text-3xl" style="color: #87986A;"></i>
+                        <div class="alert bg-gradient-to-r from-[#F6FAFD] to-[#B3CFE5] border-2 shadow-lg mb-8 fade-in-up" style="border-color: #4A7FA7; animation-delay: 0.5s">
+                            <i class="fas fa-calendar-alt text-3xl" style="color: #1A3D63;"></i>
                             <div>
-                                <h4 class="font-bold text-lg" style="color: #718355;">
+                                <h4 class="font-bold text-lg" style="color: #1A3D63;">
                                     <i class="bi bi-clock-history"></i> Date et Heure d'Arrivée
                                 </h4>
-                                <p class="text-2xl font-extrabold mt-1" style="color: #718355;">
+                                <p class="text-2xl font-extrabold mt-1" style="color: #1A3D63;">
                                     <%= new java.text.SimpleDateFormat("EEEE dd MMMM yyyy 'à' HH:mm", new java.util.Locale("fr", "FR"))
                                         .format(reservation.getDateHeureArrive()) %>
                                 </p>
@@ -500,7 +500,7 @@
                             <!-- Status -->
                             <div class="card bg-base-100 shadow-xl border-2 border-gray-200 fade-in-up" style="animation-delay: 0.6s">
                                 <div class="card-body items-center text-center">
-                                    <i class="fas fa-check-double text-5xl mb-3" style="color: #87986A;"></i>
+                                    <i class="fas fa-check-double text-5xl mb-3" style="color: #1A3D63;"></i>
                                     <h4 class="card-title text-gray-700">Statut de la Réservation</h4>
                                     <span class="custom-badge text-lg mt-2">
                                         <i class="bi bi-shield-check"></i> <%= reservation.getStatut() %>
@@ -524,7 +524,7 @@
                         <% if (reservation.getCommentaire() != null && !reservation.getCommentaire().isEmpty()) { %>
                         <div class="card bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 shadow-xl mb-8 fade-in-up" style="animation-delay: 0.8s">
                             <div class="card-body">
-                                <h3 class="card-title" style="color: #718355;">
+                                <h3 class="card-title" style="color: #1A3D63;">
                                     <i class="fas fa-comment-dots text-2xl"></i>
                                     Commentaire / Demandes Spéciales
                                 </h3>
@@ -544,7 +544,7 @@
                                 <span class="font-bold">Nouvelle Réservation</span>
                                 <i class="fas fa-arrow-right"></i>
                             </a>
-                            <a href="/sprint0/reservation/list" class="btn btn-outline btn-lg border-2 ripple shine" style="border-color: #87986A; color: #718355;" onmouseover="this.style.backgroundColor='#87986A'; this.style.color='white'; this.style.borderColor='#718355';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#718355'; this.style.borderColor='#87986A';">
+                            <a href="/sprint0/reservation/list" class="btn btn-outline btn-lg border-2 ripple shine" style="border-color: #1A3D63; color: #1A3D63;" onmouseover="this.style.backgroundColor='#1A3D63'; this.style.color='white'; this.style.borderColor='#1A3D63';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#1A3D63'; this.style.borderColor='#1A3D63';">
                                 <i class="bi bi-list-ul text-xl"></i>
                                 <span class="font-bold">Voir Toutes les Réservations</span>
                                 <i class="fas fa-arrow-right"></i>
@@ -667,7 +667,7 @@
                 particleCount: 150,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#718355', '#87986A', '#97A97C', '#B5C99A', '#CFE1B9']
+                colors: ['#1A3D63', '#1A3D63', '#4A7FA7', '#4A7FA7', '#B3CFE5']
             });
 
             // Second burst
@@ -677,7 +677,7 @@
                     angle: 60,
                     spread: 55,
                     origin: { x: 0 },
-                    colors: ['#718355', '#87986A', '#97A97C']
+                    colors: ['#1A3D63', '#1A3D63', '#4A7FA7']
                 });
             }, 300);
 
@@ -687,7 +687,7 @@
                     angle: 120,
                     spread: 55,
                     origin: { x: 1 },
-                    colors: ['#718355', '#87986A', '#97A97C']
+                    colors: ['#1A3D63', '#1A3D63', '#4A7FA7']
                 });
             }, 600);
 

@@ -32,7 +32,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -123,7 +123,7 @@
         /* Button magical */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -151,7 +151,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -168,7 +168,7 @@
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #87986A, #97A97C, #B5C99A);
+            background: linear-gradient(90deg, #1A3D63, #4A7FA7, #4A7FA7);
             transition: width 0.5s ease;
             box-shadow: 0 0 10px rgba(135, 152, 106, 0.5);
         }
@@ -186,7 +186,7 @@
 
         .fuel-card.selected {
             transform: scale(1.05);
-            box-shadow: 0 0 0 4px #87986A;
+            box-shadow: 0 0 0 4px #1A3D63;
         }
 
         /* Custom scrollbar */
@@ -195,11 +195,11 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #E9F5DB;
+            background: #F6FAFD;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #87986A, #97A97C);
+            background: linear-gradient(180deg, #1A3D63, #4A7FA7);
             border-radius: 10px;
         }
 
@@ -226,7 +226,7 @@
 
         /* Input validation */
         .input-valid {
-            border-color: #87986A !important;
+            border-color: #1A3D63 !important;
             box-shadow: 0 0 0 3px rgba(135, 152, 106, 0.1);
         }
 
@@ -254,7 +254,7 @@
             <div class="glass-card rounded-3xl shadow-2xl overflow-hidden fade-in-up">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-8 md:p-12">
+                <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-8 md:p-12">
                     <div class="text-center fade-in-down">
                         <div class="text-7xl mb-4 floating inline-block">
                             ${empty vehicule ? '🚗' : '🔧'}
@@ -308,13 +308,13 @@
                         <!-- Reference Field -->
                         <div class="form-control fade-in-up" style="animation-delay: 0.1s">
                             <label class="label">
-                                <span class="label-text font-bold text-lg" style="color: #718355;">
+                                <span class="label-text font-bold text-lg" style="color: #1A3D63;">
                                     <i class="fas fa-tag"></i> Référence du véhicule
                                 </span>
                                 <span class="label-text-alt text-red-500">* Requis</span>
                             </label>
                             <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl" style="color: #87986A;">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl" style="color: #1A3D63;">
                                     <i class="bi bi-car-front"></i>
                                 </span>
                                 <input 
@@ -325,7 +325,7 @@
                                     placeholder="Ex: VEH-001, BMW-X5, TESLA-M3..." 
                                     class="input input-bordered w-full pl-14 form-input text-lg font-semibold"
                                     required
-                                    style="border: 2px solid #B5C99A;"
+                                    style="border: 2px solid #4A7FA7;"
                                 />
                                 <div class="label">
                                     <span class="label-text-alt">
@@ -339,13 +339,13 @@
                         <!-- Number of Seats Field -->
                         <div class="form-control fade-in-up" style="animation-delay: 0.2s">
                             <label class="label">
-                                <span class="label-text font-bold text-lg" style="color: #718355;">
+                                <span class="label-text font-bold text-lg" style="color: #1A3D63;">
                                     <i class="fas fa-users"></i> Nombre de places
                                 </span>
                                 <span class="label-text-alt text-red-500">* Requis</span>
                             </label>
                             <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl" style="color: #87986A;">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl" style="color: #1A3D63;">
                                     <i class="bi bi-people-fill"></i>
                                 </span>
                                 <input 
@@ -358,14 +358,14 @@
                                     placeholder="Ex: 2, 5, 7, 50..." 
                                     class="input input-bordered w-full pl-14 form-input text-lg font-semibold"
                                     required
-                                    style="border: 2px solid #B5C99A;"
+                                    style="border: 2px solid #4A7FA7;"
                                 />
                                 <div class="label">
                                     <span class="label-text-alt">
                                         <i class="fas fa-info-circle"></i>
                                         Capacité d'accueil du véhicule (passagers)
                                     </span>
-                                    <span class="label-text-alt font-bold" style="color: #87986A;" id="seatCounter">
+                                    <span class="label-text-alt font-bold" style="color: #1A3D63;" id="seatCounter">
                                         <i class="fas fa-chair"></i> 0 places
                                     </span>
                                 </div>
@@ -375,7 +375,7 @@
                         <!-- Fuel Type Selection -->
                         <div class="form-control fade-in-up" style="animation-delay: 0.3s">
                             <label class="label">
-                                <span class="label-text font-bold text-lg" style="color: #718355;">
+                                <span class="label-text font-bold text-lg" style="color: #1A3D63;">
                                     <i class="fas fa-gas-pump"></i> Type de carburant
                                 </span>
                                 <span class="label-text-alt text-red-500">* Requis</span>
@@ -432,7 +432,7 @@
                                 <i class="fas fa-check text-xl"></i>
                             </button>
                             
-                            <a href="${pageContext.request.contextPath}/vehicule/list-view" class="btn btn-outline btn-lg flex-1" style="border-color: #87986A; color: #87986A;">
+                            <a href="${pageContext.request.contextPath}/vehicule/list-view" class="btn btn-outline btn-lg flex-1" style="border-color: #1A3D63; color: #1A3D63;">
                                 <i class="fas fa-times text-xl"></i>
                                 <span class="font-bold">Annuler</span>
                             </a>
@@ -443,17 +443,17 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10 fade-in-up" style="animation-delay: 0.5s">
                         <div class="glass-card rounded-xl p-6 text-center">
                             <div class="text-4xl mb-2">🎯</div>
-                            <h3 class="font-bold" style="color: #718355;">Précision</h3>
+                            <h3 class="font-bold" style="color: #1A3D63;">Précision</h3>
                             <p class="text-sm text-gray-600 mt-2">Renseignez avec exactitude</p>
                         </div>
                         <div class="glass-card rounded-xl p-6 text-center">
                             <div class="text-4xl mb-2">⚡</div>
-                            <h3 class="font-bold" style="color: #718355;">Rapidité</h3>
+                            <h3 class="font-bold" style="color: #1A3D63;">Rapidité</h3>
                             <p class="text-sm text-gray-600 mt-2">Formulaire en 30 secondes</p>
                         </div>
                         <div class="glass-card rounded-xl p-6 text-center">
                             <div class="text-4xl mb-2">✅</div>
-                            <h3 class="font-bold" style="color: #718355;">Validation</h3>
+                            <h3 class="font-bold" style="color: #1A3D63;">Validation</h3>
                             <p class="text-sm text-gray-600 mt-2">Vérification automatique</p>
                         </div>
                     </div>
@@ -495,7 +495,7 @@
             
             // Visual feedback
             if (progress === 100) {
-                progressBar.style.background = 'linear-gradient(90deg, #87986A, #718355)';
+                progressBar.style.background = 'linear-gradient(90deg, #1A3D63, #1A3D63)';
                 progressText.textContent = '✅ Formulaire complet !';
             }
         }

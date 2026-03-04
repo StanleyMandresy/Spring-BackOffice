@@ -33,7 +33,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -107,7 +107,7 @@
         }
 
         .form-input:focus {
-            border-color: #87986A;
+            border-color: #1A3D63;
             box-shadow: 0 0 0 4px rgba(135, 152, 106, 0.2);
             transform: translateY(-2px);
         }
@@ -126,7 +126,7 @@
         .form-input:not(:placeholder-shown) ~ .form-label {
             transform: translateY(-5px);
             font-size: 0.875rem;
-            color: #718355;
+            color: #1A3D63;
         }
 
         /* Glow effect on hover */
@@ -142,7 +142,7 @@
         /* Progress bar */
         .progress-bar {
             height: 6px;
-            background: linear-gradient(90deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(90deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             border-radius: 10px;
             transition: width 0.5s ease;
         }
@@ -186,8 +186,8 @@
 
         /* Hotel card in select (visual enhancement) */
         .hotel-card {
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 100%);
-            border: 2px solid #87986A;
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 100%);
+            border: 2px solid #1A3D63;
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
@@ -203,7 +203,7 @@
         /* Button magical effect */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -231,7 +231,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -243,7 +243,7 @@
             left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #87986A;
+            color: #1A3D63;
             font-size: 1.25rem;
             transition: all 0.3s ease;
         }
@@ -253,7 +253,7 @@
         }
 
         .form-input:focus + .input-icon {
-            color: #718355;
+            color: #1A3D63;
             transform: translateY(-50%) scale(1.2);
         }
 
@@ -266,7 +266,7 @@
         .tooltip-custom .tooltiptext {
             visibility: hidden;
             width: 200px;
-            background-color: #718355;
+            background-color: #1A3D63;
             color: #fff;
             text-align: center;
             border-radius: 8px;
@@ -292,8 +292,8 @@
             transform: rotate(45deg);
             height: 20px;
             width: 10px;
-            border-bottom: 3px solid #87986A;
-            border-right: 3px solid #87986A;
+            border-bottom: 3px solid #1A3D63;
+            border-right: 3px solid #1A3D63;
             animation: checkmark 0.5s ease;
         }
 
@@ -305,7 +305,7 @@
 
         /* Form validation indicators */
         .input-valid {
-            border-color: #87986A !important;
+            border-color: #1A3D63 !important;
             background-color: rgba(135, 152, 106, 0.08);
         }
 
@@ -357,7 +357,7 @@
             <div class="glass-card rounded-3xl shadow-2xl overflow-hidden fade-in-up">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-10 text-center relative overflow-hidden">
+                <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-10 text-center relative overflow-hidden">
                     <!-- Animated circles -->
                     <div class="absolute top-0 left-0 w-64 h-64 bg-white opacity-10 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
                     <div class="absolute bottom-0 right-0 w-80 h-80 bg-white opacity-10 rounded-full translate-x-1/3 translate-y-1/3"></div>
@@ -430,7 +430,7 @@
                         <div class="form-group fade-in-up" style="animation-delay: 0.1s">
                             <label for="idClient" class="label">
                                 <span class="label-text text-base font-bold text-gray-700">
-                                    <i class="bi bi-person-badge" style="color: #87986A;"></i>
+                                    <i class="bi bi-person-badge" style="color: #1A3D63;"></i>
                                     Identifiant Client
                                     <span class="text-red-500">*</span>
                                 </span>
@@ -458,7 +458,7 @@
                         <div class="form-group fade-in-up" style="animation-delay: 0.2s">
                             <label for="idHotel" class="label">
                                 <span class="label-text text-base font-bold text-gray-700">
-                                    <i class="fas fa-hotel" style="color: #87986A;"></i>
+                                    <i class="fas fa-hotel" style="color: #1A3D63;"></i>
                                     Sélectionnez un Hôtel
                                     <span class="text-red-500">*</span>
                                 </span>
@@ -503,7 +503,7 @@
                         <div class="form-group fade-in-up" style="animation-delay: 0.3s">
                             <label for="nombrePassagers" class="label">
                                 <span class="label-text text-base font-bold text-gray-700">
-                                    <i class="bi bi-people-fill" style="color: #87986A;"></i>
+                                    <i class="bi bi-people-fill" style="color: #1A3D63;"></i>
                                     Nombre de Passagers
                                     <span class="text-red-500">*</span>
                                 </span>
@@ -533,7 +533,7 @@
                             <div class="form-group fade-in-up" style="animation-delay: 0.4s">
                                 <label for="dateArrivee" class="label">
                                     <span class="label-text text-base font-bold text-gray-700">
-                                        <i class="bi bi-calendar-event" style="color: #87986A;"></i>
+                                        <i class="bi bi-calendar-event" style="color: #1A3D63;"></i>
                                         Date d'Arrivée
                                         <span class="text-red-500">*</span>
                                     </span>
@@ -551,7 +551,7 @@
                             <div class="form-group fade-in-up" style="animation-delay: 0.5s">
                                 <label for="heureArrivee" class="label">
                                     <span class="label-text text-base font-bold text-gray-700">
-                                        <i class="bi bi-clock-fill" style="color: #87986A;"></i>
+                                        <i class="bi bi-clock-fill" style="color: #1A3D63;"></i>
                                         Heure d'Arrivée
                                         <span class="text-red-500">*</span>
                                     </span>
@@ -570,7 +570,7 @@
                         <div class="form-group fade-in-up" style="animation-delay: 0.6s">
                             <label for="commentaire" class="label">
                                 <span class="label-text text-base font-bold text-gray-700">
-                                    <i class="fas fa-comment-dots" style="color: #87986A;"></i>
+                                    <i class="fas fa-comment-dots" style="color: #1A3D63;"></i>
                                     Commentaire / Demandes Spéciales
                                 </span>
                                 <span class="label-text-alt text-gray-500">Optionnel</span>
@@ -589,19 +589,19 @@
 
                         <!-- Price Estimate -->
                         <div id="price-estimate" class="hidden fade-in-up">
-                            <div class="card bg-gradient-to-br from-[#E9F5DB] to-[#CFE1B9] border-2 shadow-lg" style="border-color: #B5C99A;">
+                            <div class="card bg-gradient-to-br from-[#F6FAFD] to-[#B3CFE5] border-2 shadow-lg" style="border-color: #4A7FA7;">
                                 <div class="card-body">
-                                    <h3 class="card-title" style="color: #718355;">
+                                    <h3 class="card-title" style="color: #1A3D63;">
                                         <i class="fas fa-calculator"></i>
                                         Estimation du Prix
                                     </h3>
                                     <div class="stats stats-vertical lg:stats-horizontal shadow mt-4">
                                         <div class="stat bg-white/70">
-                                            <div class="stat-figure" style="color: #87986A;">
+                                            <div class="stat-figure" style="color: #1A3D63;">
                                                 <i class="fas fa-euro-sign text-3xl"></i>
                                             </div>
                                             <div class="stat-title">Prix par nuit</div>
-                                            <div class="stat-value" style="color: #87986A;" id="price-per-night">0€</div>
+                                            <div class="stat-value" style="color: #1A3D63;" id="price-per-night">0€</div>
                                         </div>
                                         <div class="stat bg-white/70">
                                             <div class="stat-figure text-blue-600">
@@ -630,7 +630,7 @@
 
                         <!-- Additional Info -->
                         <div class="text-center text-sm text-gray-600 fade-in-up" style="animation-delay: 0.8s">
-                            <i class="bi bi-shield-lock-fill" style="color: #87986A;"></i>
+                            <i class="bi bi-shield-lock-fill" style="color: #1A3D63;"></i>
                             Vos informations sont sécurisées et cryptées
                         </div>
                     </form>
@@ -642,7 +642,7 @@
                     <div class="text-center fade-in-up" style="animation-delay: 1s">
                         <a 
                             href="/sprint0/reservation/list" 
-                            class="btn btn-outline btn-lg border-2 ripple shine" style="border-color: #87986A; color: #718355;" onmouseover="this.style.backgroundColor='#87986A'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#718355';"
+                            class="btn btn-outline btn-lg border-2 ripple shine" style="border-color: #1A3D63; color: #1A3D63;" onmouseover="this.style.backgroundColor='#1A3D63'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#1A3D63';"
                         >
                             <i class="bi bi-list-ul text-xl"></i>
                             <span class="font-bold">Voir Toutes les Réservations</span>

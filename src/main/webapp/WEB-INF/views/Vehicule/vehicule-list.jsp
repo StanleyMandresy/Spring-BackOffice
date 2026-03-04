@@ -32,7 +32,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #E9F5DB 0%, #CFE1B9 25%, #B5C99A 50%, #97A97C 75%, #87986A 100%);
+            background: linear-gradient(135deg, #F6FAFD 0%, #B3CFE5 25%, #4A7FA7 50%, #4A7FA7 75%, #1A3D63 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -174,7 +174,7 @@
         /* Button magical */
         .btn-magical {
             position: relative;
-            background: linear-gradient(135deg, #87986A 0%, #718355 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 100%);
             border: none;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -202,7 +202,7 @@
 
         /* Gradient text */
         .gradient-text {
-            background: linear-gradient(135deg, #718355 0%, #87986A 50%, #97A97C 100%);
+            background: linear-gradient(135deg, #1A3D63 0%, #1A3D63 50%, #4A7FA7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -214,16 +214,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #E9F5DB;
+            background: #F6FAFD;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #87986A, #97A97C);
+            background: linear-gradient(180deg, #1A3D63, #4A7FA7);
             border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #718355, #87986A);
+            background: linear-gradient(180deg, #1A3D63, #1A3D63);
         }
 
         /* Modal backdrop */
@@ -283,7 +283,7 @@
             <div class="glass-card rounded-3xl shadow-2xl overflow-hidden">
                 
                 <!-- Header -->
-                <div class="bg-gradient-to-br from-[#B5C99A] via-[#97A97C] to-[#87986A] p-8 md:p-12 relative overflow-hidden">
+                <div class="bg-gradient-to-br from-[#4A7FA7] via-[#4A7FA7] to-[#1A3D63] p-8 md:p-12 relative overflow-hidden">
                     <!-- Animated background pattern -->
                     <div class="absolute inset-0 opacity-10">
                         <div class="car-drive text-9xl absolute top-1/2 left-0">🚗</div>
@@ -350,14 +350,14 @@
                     <c:choose>
                         <c:when test="${not empty vehicules}">
                             <!-- Statistics Bar -->
-                            <div class="stats stats-vertical lg:stats-horizontal shadow-2xl w-full mb-10 fade-in-up" style="animation-delay: 0.2s; background: linear-gradient(135deg, #E9F5DB, #CFE1B9);">
+                            <div class="stats stats-vertical lg:stats-horizontal shadow-2xl w-full mb-10 fade-in-up" style="animation-delay: 0.2s; background: linear-gradient(135deg, #F6FAFD, #B3CFE5);">
                                 <div class="stat">
-                                    <div class="stat-figure" style="color: #718355;">
+                                    <div class="stat-figure" style="color: #1A3D63;">
                                         <i class="fas fa-car-side text-5xl"></i>
                                     </div>
-                                    <div class="stat-title font-bold text-lg" style="color: #718355;">Total Véhicules</div>
+                                    <div class="stat-title font-bold text-lg" style="color: #1A3D63;">Total Véhicules</div>
                                     <div class="stat-value count-animation gradient-text" id="totalCount">${not empty total ? total : vehicules.size()}</div>
-                                    <div class="stat-desc font-semibold" style="color: #87986A;">Dans le parc</div>
+                                    <div class="stat-desc font-semibold" style="color: #1A3D63;">Dans le parc</div>
                                 </div>
                                 
                                 <div class="stat">
@@ -448,7 +448,7 @@
                                             </div>
                                             
                                             <!-- Car Icon -->
-                                            <div class="p-8 bg-gradient-to-br from-[#E9F5DB] to-[#CFE1B9] flex items-center justify-center">
+                                            <div class="p-8 bg-gradient-to-br from-[#F6FAFD] to-[#B3CFE5] flex items-center justify-center">
                                                 <div class="text-8xl">🚗</div>
                                             </div>
                                         </div>
@@ -463,22 +463,22 @@
                                             
                                             <div class="space-y-3">
                                                 <div class="flex items-center gap-3 p-3 rounded-lg" style="background: rgba(181, 201, 154, 0.1);">
-                                                    <div class="text-3xl" style="color: #87986A;">
+                                                    <div class="text-3xl" style="color: #1A3D63;">
                                                         <i class="fas fa-hashtag"></i>
                                                     </div>
                                                     <div>
                                                         <p class="text-sm font-semibold text-gray-500">ID</p>
-                                                        <p class="text-xl font-bold" style="color: #718355;">${vehicule.id}</p>
+                                                        <p class="text-xl font-bold" style="color: #1A3D63;">${vehicule.id}</p>
                                                     </div>
                                                 </div>
                                                 
                                                 <div class="flex items-center gap-3 p-3 rounded-lg" style="background: rgba(181, 201, 154, 0.1);">
-                                                    <div class="text-3xl" style="color: #87986A;">
+                                                    <div class="text-3xl" style="color: #1A3D63;">
                                                         <i class="fas fa-users"></i>
                                                     </div>
                                                     <div>
                                                         <p class="text-sm font-semibold text-gray-500">Capacité</p>
-                                                        <p class="text-xl font-bold" style="color: #718355;">${vehicule.nbrPlace} places</p>
+                                                        <p class="text-xl font-bold" style="color: #1A3D63;">${vehicule.nbrPlace} places</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -486,7 +486,7 @@
                                             <div class="card-actions justify-end mt-4 gap-2">
                                                 <a href="${pageContext.request.contextPath}/vehicule/edit?id=${vehicule.id}" 
                                                    class="btn btn-sm shine" 
-                                                   style="background: #87986A; color: white;">
+                                                   style="background: #1A3D63; color: white;">
                                                     <i class="fas fa-edit"></i>
                                                     Modifier
                                                 </a>
@@ -546,7 +546,7 @@
             </h3>
             <p class="text-lg mb-2">
                 Êtes-vous sûr de vouloir supprimer le véhicule 
-                <span class="font-extrabold" style="color: #718355;" id="vehiculeRef"></span> ?
+                <span class="font-extrabold" style="color: #1A3D63;" id="vehiculeRef"></span> ?
             </p>
             <p class="text-red-600 font-bold mb-6">
                 <i class="fas fa-exclamation-circle"></i>
