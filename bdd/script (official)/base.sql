@@ -6,7 +6,7 @@ CREATE TABLE hotel (
     ville VARCHAR(100),
     prix_nuit NUMERIC(10,2),
     nombre_etoiles INTEGER CHECK (nombre_etoiles BETWEEN 1 AND 5),
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE reservation (
@@ -70,4 +70,14 @@ CREATE TABLE distance (
 
     CONSTRAINT unique_trajet UNIQUE (from_depart, to_arrive),
     CONSTRAINT check_different_hotels CHECK (from_depart <> to_arrive)
+);
+
+CREATE TABLE planning_transport (
+    id SERIAL PRIMARY KEY,
+    id_reservation INTEGER REFERENCES reservation(id_reservation) ON DELETE CASCADE,
+    id_vehicule INTEGER NOT NULL,
+    date_transport DATE NOT NULL,
+    heure_depart TIMESTAMP NOT NULL,
+    heure_arrive TIMESTAMP NOT NULL,
+    heure_retour TIMESTAMP NULL
 );
