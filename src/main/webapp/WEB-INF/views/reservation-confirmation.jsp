@@ -346,7 +346,12 @@
     </style>
 </head>
 <body class="relative">
-    <!-- Floating particles -->
+    <!-- Include Sidebar -->
+    <%@ include file="components/sidebar.jsp" %>
+    
+    <!-- Main Content with Sidebar -->
+    <div class="main-content-with-sidebar">
+        <!-- Floating particles -->
     <% for(int i = 0; i < 15; i++) { %>
         <div class="particle" style="left: <%= Math.random() * 100 %>%; animation-delay: <%= Math.random() * 20 %>s;"></div>
     <% } %>
@@ -781,5 +786,7 @@
             });
         });
     </script>
+    
+    </div><!-- End main-content-with-sidebar -->
 </body>
 </html>

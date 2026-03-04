@@ -210,7 +210,12 @@
     </style>
 </head>
 <body>
-    <!-- Floating particles -->
+    <!-- Include Sidebar -->
+    <%@ include file="../components/sidebar.jsp" %>
+    
+    <!-- Main Content with Sidebar -->
+    <div class="main-content-with-sidebar">
+        <!-- Floating particles -->
     <% for(int i = 0; i < 25; i++) { %>
         <div class="particle" style="left: <%= Math.random() * 100 %>%; animation-delay: <%= Math.random() * 30 %>s; width: <%= 6 + Math.random() * 8 %>px; height: <%= 6 + Math.random() * 8 %>px;"></div>
     <% } %>
@@ -447,5 +452,7 @@
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
     </script>
+    
+    </div><!-- End main-content-with-sidebar -->
 </body>
 </html>
