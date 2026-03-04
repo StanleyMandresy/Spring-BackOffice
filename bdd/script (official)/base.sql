@@ -1,3 +1,4 @@
+-- Active: 1765874928894@@127.0.0.1@5432@sprint0
 -------Sprint 1: 06-02-2026------------------------------
 CREATE TABLE hotel (
     id_hotel SERIAL PRIMARY KEY,
@@ -6,7 +7,7 @@ CREATE TABLE hotel (
     ville VARCHAR(100),
     prix_nuit NUMERIC(10,2),
     nombre_etoiles INTEGER CHECK (nombre_etoiles BETWEEN 1 AND 5),
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+    date_creation DATE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE reservation (
