@@ -267,3 +267,17 @@ CREATE INDEX idx_reservation_hotel ON reservation(id_hotel);
 -- JOIN hotel h ON g.id_hotel_destination = h.id_hotel
 -- ORDER BY g.date_heure_depart, g.ordre_depart;
 khjbjhkfhgjkl
+
+INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
+VALUES (11, 1001, 2, '2026-03-05 08:30:00', 4, 'en_attente');
+
+INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
+VALUES (12, 1002, 3, '2026-03-05 08:00:00', 7, 'en_attente');
+
+
+INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
+VALUES (13, 1003, 4, '2026-03-05 08:45:00', 5, 'en_attente');
+
+
+INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
+VALUES (14, 1004, 2, '2026-03-05 11:45:00', 7, 'en_attente');
