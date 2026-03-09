@@ -1,0 +1,71 @@
+TL : ETU003209
+Dev : ETU003111
+      ETU003118
+
+
+BackOffice
+
+    =========================
+    1. FEATURE – PLANIFICATION
+    =========================
+    - feature/entitePlanificationTransport : ETU003111
+    - feature/algorithmePlanificationOptimale : ETU003111
+    - feature/servicePlanificationAvancee : ETU003118
+    - feature/controllerPlanificationDetaillée : ETU003118
+    - feature/gestionConflitsHoraires : ETU003111
+    - feature/optimisationItinéraires : ETU003118
+    - fix/validationDatesPlanification : ETU003111
+
+    =========================
+    2. FEATURE – REPORTING ET ANALYTICS
+    =========================
+    - feature/rapportUtilisationVehicules : ETU003111
+    - feature/statistiquesReservations : ETU003118
+    - feature/dashboardGestionBackoffice : ETU003111
+    - feature/exportDonneesCSV : ETU003111
+    - feature/metriquesPerformance : ETU003118
+
+    =========================
+    3. SCRIPT – REINITIALISATION BDD
+    =========================
+    - script/nettoyageBddComplete : ETU003111
+    - script/reinitalisationDonneesTest : ETU003118
+    - script/sauvegardeBddAvantReset : ETU003118
+    - script/resturationDonneesProduction : ETU003111
+    - feature/interfaceGestionBdd : ETU003111
+    - test/validationIntegriteBdd : ETU003118
+
+    =========================
+    4. SECURISATION – AMELIORATIONS
+    =========================
+    - feature/gestionRolesUtilisateurs : ETU003118
+    - feature/auditTrailActions : ETU003111
+    - feature/limitationTentativesConnexion : ETU003111
+    - fix/securisationEndpointsPlanification : ETU003118
+
+
+
+
+creation de table
+-planification_details
+    id_planification
+    id_vehicule  
+    id_reservation
+    date_debut
+    date_fin
+    statut
+    itineraire
+-audit_log
+    id_audit
+    id_utilisateur
+    action
+    table_affectee
+    date_action
+    details_action
+-metriques_performance
+    id_metrique
+    type_metrique
+    valeur
+    date_mesure
+    periode
+

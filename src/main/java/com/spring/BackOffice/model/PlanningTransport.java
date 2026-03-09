@@ -101,13 +101,15 @@ public class PlanningTransport {
         );
     }
 
-public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
+ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
 
     // 🔹 Récupérer toutes les réservations du jour
     List<Reservation> reservations = Reservation.findByDate(jdbcTemplate, date);
 
     // 🔹 Charger tous les véhicules
     List<Vehicule> vehicules = Vehicule.findAll(jdbcTemplate);
+    vehicules.sort(Comparator.comparingInt(Vehicule::getNbrPlace));
+
 
     // 🔹 Paramètres
     Parametre param = Parametre.getLatest(jdbcTemplate);
@@ -116,7 +118,12 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
     Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
     // 🔹 Trier les réservations par nombre de passagers décroissant
-    reservations.sort((r1, r2) -> Integer.compare(r2.getNombrePassagers(), r1.getNombrePassagers()));
+   reservations.sort((r1, r2) -> {
+    int cmp = r1.getDateHeureArrive().compareTo(r2.getDateHeureArrive());
+    if (cmp != 0) return cmp;
+
+    return Integer.compare(r2.getNombrePassagers(), r1.getNombrePassagers());
+});
 
     // 🔹 Carte pour suivre la disponibilité des véhicules
     Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
@@ -138,7 +145,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             if (res.getNombrePassagers() <= capaciteRestante) {
                 groupe.add(res);
                 capaciteRestante -= res.getNombrePassagers();
-                Reservation.updateStatut(jdbcTemplate,  res.getIdReservation(),  "planifie");
+                Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "planifie");
             }
         }
 
@@ -197,12 +204,15 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             positionActuelle = Hotel.findById(jdbcTemplate, res.getIdHotel());
         }
     }
-     for (Reservation res : reservations) {
+
+    // 🔹 Mettre à jour le statut "annule" pour les réservations qui n'ont pas été planifiées
+    for (Reservation res : reservations) {
         if (!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate, res.getIdReservation())) {
             Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "annule");
         }
     }
-}
+}   
+
 public static List<PlanningTransport> findByDate(JdbcTemplate jdbcTemplate, LocalDate date) {
         String sql = "SELECT pt.*, r.id_client, r.id_hotel, r.nombre_passagers, r.commentaire, r.date_heure_arrive, h.nom_hotel, v.reference " +
                      "FROM planning_transport pt " +

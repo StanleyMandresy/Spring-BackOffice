@@ -135,20 +135,16 @@ public class Reservation {
         String sql = "SELECT r.*, h.nom_hotel " +
                      "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
-                     "WHERE CAST(r.date_heure_arrive AS DATE) = ? ";
-        java.sql.Date sqlDate = java.sql.Date.valueOf(date);
-        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{sqlDate}, new ReservationRowMapper());
-        return list.isEmpty() ? null : list;
+                     "WHERE DATE(r.date_heure_arrive) = ? ";
+        return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
     }
 
      public static List<Reservation> findByDateAnnuleList(JdbcTemplate jdbcTemplate, LocalDate date) {
         String sql = "SELECT r.*, h.nom_hotel " +
                      "FROM reservation r " +
                      "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
-                     "WHERE CAST(r.date_heure_arrive AS DATE) = ? AND r.statut = 'annule'";
-        java.sql.Date sqlDate = java.sql.Date.valueOf(date);
-        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{sqlDate}, new ReservationRowMapper());
-        return list.isEmpty() ? null : list;
+                     "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = 'annule'";
+        return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
     }
     
     
