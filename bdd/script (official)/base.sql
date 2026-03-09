@@ -1,3 +1,4 @@
+-- Active: 1765874928894@@127.0.0.1@5432@sprint0
 -------Sprint 1: 06-02-2026------------------------------
 CREATE TABLE hotel (
     id_hotel SERIAL PRIMARY KEY,
