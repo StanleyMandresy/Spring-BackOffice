@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 public class PlanningTransport {
@@ -100,118 +101,149 @@ public class PlanningTransport {
                 heureRetour
         );
     }
+public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
 
- public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
-
-    // 🔹 Récupérer toutes les réservations du jour
     List<Reservation> reservations = Reservation.findByDate(jdbcTemplate, date);
-
-    // 🔹 Charger tous les véhicules
     List<Vehicule> vehicules = Vehicule.findAll(jdbcTemplate);
-    vehicules.sort(Comparator.comparingInt(Vehicule::getNbrPlace));
 
-
-    // 🔹 Paramètres
     Parametre param = Parametre.getLatest(jdbcTemplate);
     double vitesse = param.getVitesseKmh().doubleValue();
 
     Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
-    // 🔹 Trier les réservations par nombre de passagers décroissant
-   reservations.sort((r1, r2) -> {
-    int cmp = r1.getDateHeureArrive().compareTo(r2.getDateHeureArrive());
-    if (cmp != 0) return cmp;
-
-    return Integer.compare(r2.getNombrePassagers(), r1.getNombrePassagers());
-});
-
-    // 🔹 Carte pour suivre la disponibilité des véhicules
+    // disponibilité des véhicules
     Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
     for (Vehicule v : vehicules) {
-        dispoVehicule.put(v.getId(), LocalDateTime.of(date, java.time.LocalTime.MIN));
+        dispoVehicule.put(v.getId(), LocalDateTime.of(date, LocalTime.MIN));
     }
 
-    // 🔹 Boucle sur les véhicules
-    for (Vehicule vehicule : vehicules) {
+    // Grouper les réservations par heure
+    Map<Integer, List<Reservation>> reservationsParHeure = new HashMap<>();
 
-        int capaciteRestante = vehicule.getNbrPlace();
-        List<Reservation> groupe = new ArrayList<>();
+    for (Reservation r : reservations) {
+        int heure = r.getDateHeureArrive().getHours();
+        reservationsParHeure.computeIfAbsent(heure, k -> new ArrayList<>()).add(r);
+    }
 
-        // 🔹 Former le groupe en fonction de la capacité
-        for (Reservation res : reservations) {
+    for (Integer heure : reservationsParHeure.keySet()) {
 
-            if (PlanningTransport.reservationDejaPlanifiee(jdbcTemplate, res.getIdReservation())) continue;
+        List<Reservation> tranche = reservationsParHeure.get(heure);
 
-            if (res.getNombrePassagers() <= capaciteRestante) {
-                groupe.add(res);
-                capaciteRestante -= res.getNombrePassagers();
-                Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "planifie");
-            }
-        }
+        // trier par nombre de passagers décroissant
+        tranche.sort((a,b)->Integer.compare(b.getNombrePassagers(),a.getNombrePassagers()));
 
-        if (groupe.isEmpty()) continue;
+        Set<Long> traitees = new HashSet<>();
 
-        // 🔹 Heure de départ = dernier client embarqué
-        LocalDateTime heureDepart = groupe.stream()
-            .map(res -> res.getDateHeureArrive().toLocalDateTime())
-            .max(LocalDateTime::compareTo)
-            .orElse(LocalDateTime.now());
+        for (Reservation principale : tranche) {
 
-        // 🔹 Trier le groupe par distance depuis l'aéroport
-        groupe.sort((r1, r2) -> {
-            Distance d1 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r1.getIdHotel());
-            Distance d2 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r2.getIdHotel());
-            return d1.getDistanceKm().compareTo(d2.getDistanceKm());
-        });
+            if (traitees.contains(principale.getIdReservation())) continue;
 
-        // 🔹 Boucle sur le groupe pour calculer heures et sauver planning
-        LocalDateTime heureCourante = heureDepart;
-        Hotel positionActuelle = aeroport;
+            int passagers = principale.getNombrePassagers();
 
-        for (int i = 0; i < groupe.size(); i++) {
-            Reservation res = groupe.get(i);
+            // trouver véhicule le plus proche en capacité
+            Vehicule choisi = null;
+            int meilleurEcart = Integer.MAX_VALUE;
 
-            Distance dist = Distance.findByHotels(jdbcTemplate, positionActuelle.getIdHotel(), res.getIdHotel());
-            double km = dist.getDistanceKm().doubleValue();
-            long duree = Math.round((km / vitesse) * 60);
+            for (Vehicule v : vehicules) {
 
-            LocalDateTime heureArrive = heureCourante.plusMinutes(duree);
-            LocalDateTime heureRetour = null;
+                if (dispoVehicule.get(v.getId()).isAfter(principale.getDateHeureArrive().toLocalDateTime()))
+                    continue;
 
-            // 🔹 Si dernier client → retour à l'aéroport
-            if (i == groupe.size() - 1) {
-                Distance retour = Distance.findByHotels(jdbcTemplate, res.getIdHotel(), aeroport.getIdHotel());
-                long dureeRetour = Math.round((retour.getDistanceKm().doubleValue() / vitesse) * 60);
-                heureRetour = heureArrive.plusMinutes(dureeRetour);
+                int diff = v.getNbrPlace() - passagers;
 
-                // 🕒 Mise à jour disponibilité véhicule
-                dispoVehicule.put(vehicule.getId(), heureRetour);
+                if (diff >= 0 && diff < meilleurEcart) {
+                    meilleurEcart = diff;
+                    choisi = v;
+                }
             }
 
-            PlanningTransport planning = new PlanningTransport(
-                res,
-                vehicule,
-                date,
-                heureCourante,
-                heureArrive,
-                heureRetour
-            );
+            if (choisi == null) continue;
 
-            planning.save(jdbcTemplate);
+            int capaciteRestante = choisi.getNbrPlace();
+            List<Reservation> groupe = new ArrayList<>();
 
-            // 🔹 Mise à jour position pour le client suivant
-            heureCourante = heureArrive;
-            positionActuelle = Hotel.findById(jdbcTemplate, res.getIdHotel());
+            groupe.add(principale);
+            capaciteRestante -= principale.getNombrePassagers();
+            traitees.add(principale.getIdReservation());
+
+            // remplir avec autres reservations
+            for (Reservation r : tranche) {
+
+                if (traitees.contains(r.getIdReservation())) continue;
+
+                if (r.getNombrePassagers() <= capaciteRestante) {
+
+                    groupe.add(r);
+                    capaciteRestante -= r.getNombrePassagers();
+                    traitees.add(r.getIdReservation());
+                }
+            }
+
+            // heure depart = dernier client
+            LocalDateTime heureDepart = groupe.stream()
+                    .map(r -> r.getDateHeureArrive().toLocalDateTime())
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+
+            // trier par distance depuis aeroport
+            groupe.sort((r1,r2)->{
+                Distance d1 = Distance.findByHotels(jdbcTemplate,aeroport.getIdHotel(),r1.getIdHotel());
+                Distance d2 = Distance.findByHotels(jdbcTemplate,aeroport.getIdHotel(),r2.getIdHotel());
+                return d1.getDistanceKm().compareTo(d2.getDistanceKm());
+            });
+
+            LocalDateTime heureCourante = heureDepart;
+            Hotel position = aeroport;
+
+            for(int i=0;i<groupe.size();i++){
+
+                Reservation res = groupe.get(i);
+
+                Distance dist = Distance.findByHotels(jdbcTemplate,position.getIdHotel(),res.getIdHotel());
+
+                long duree = Math.round((dist.getDistanceKm().doubleValue()/vitesse)*60);
+
+                LocalDateTime arrive = heureCourante.plusMinutes(duree);
+
+                LocalDateTime retour = null;
+
+                if(i==groupe.size()-1){
+
+                    Distance retourDist = Distance.findByHotels(jdbcTemplate,res.getIdHotel(),aeroport.getIdHotel());
+
+                    long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue()/vitesse)*60);
+
+                    retour = arrive.plusMinutes(dureeRetour);
+
+                    dispoVehicule.put(choisi.getId(), retour);
+                }
+
+                PlanningTransport planning = new PlanningTransport(
+                        res,
+                        choisi,
+                        date,
+                        heureCourante,
+                        arrive,
+                        retour
+                );
+
+                planning.save(jdbcTemplate);
+
+                Reservation.updateStatut(jdbcTemplate,res.getIdReservation(),"planifie");
+
+                heureCourante = arrive;
+                position = Hotel.findById(jdbcTemplate,res.getIdHotel());
+            }
         }
     }
 
-    // 🔹 Mettre à jour le statut "annule" pour les réservations qui n'ont pas été planifiées
-    for (Reservation res : reservations) {
-        if (!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate, res.getIdReservation())) {
-            Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "annule");
+    // annuler les non planifiés
+    for(Reservation r:reservations){
+        if(!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate,r.getIdReservation())){
+            Reservation.updateStatut(jdbcTemplate,r.getIdReservation(),"annule");
         }
     }
-}   
+}
 
 public static List<PlanningTransport> findByDate(JdbcTemplate jdbcTemplate, LocalDate date) {
         String sql = "SELECT pt.*, r.id_client, r.id_hotel, r.nombre_passagers, r.commentaire, r.date_heure_arrive, h.nom_hotel, v.reference " +

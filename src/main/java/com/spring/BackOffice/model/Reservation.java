@@ -146,6 +146,31 @@ public class Reservation {
                      "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = 'annule'";
         return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
     }
+
+    public static boolean estAnnule(JdbcTemplate jdbcTemplate, Long idReservation) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE r.id_reservation = ? AND r.statut = 'annule'";
+        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{idReservation}, new ReservationRowMapper());
+        return list.isEmpty() ? false : true;
+    }
+
+     public static List<Reservation> findByStatutList(JdbcTemplate jdbcTemplate, String statut) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE r.statut = ? ORDER BY r.date_creation DESC";
+        return jdbcTemplate.query(sql, new Object[]{statut}, new ReservationRowMapper());
+    }
+
+     public static List<Reservation> findByDateAndStatutList(JdbcTemplate jdbcTemplate, LocalDate date, String statut) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = ? ORDER BY r.date_creation DESC";
+        return jdbcTemplate.query(sql, new Object[]{date, statut}, new ReservationRowMapper());
+    }
     
     
 

@@ -266,18 +266,25 @@ CREATE INDEX idx_reservation_hotel ON reservation(id_hotel);
 -- JOIN chauffeur ch ON g.id_chauffeur = ch.id_chauffeur
 -- JOIN hotel h ON g.id_hotel_destination = h.id_hotel
 -- ORDER BY g.date_heure_depart, g.ordre_depart;
-khjbjhkfhgjkl
 
+
+-- 🔹 Réservations pour le test du 2026-03-06
 INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
-VALUES (11, 1001, 2, '2026-03-05 08:30:00', 4, 'en_attente');
+VALUES
+-- petit groupe tôt
+(20, 2001, 2, '2026-03-06 08:00:00', 2, 'en_attente'),
+-- groupe moyen
+(21, 2002, 3, '2026-03-06 08:10:00', 4, 'en_attente'),
+-- gros groupe
+(22, 2003, 4, '2026-03-06 08:20:00', 5, 'en_attente'),
+-- chevauchement avec le premier
+(23, 2004, 5, '2026-03-06 08:05:00', 3, 'en_attente'),
 
-INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
-VALUES (12, 1002, 3, '2026-03-05 08:00:00', 7, 'en_attente');
-
-
-INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
-VALUES (13, 1003, 4, '2026-03-05 08:45:00', 5, 'en_attente');
-
-
-INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
-VALUES (14, 1004, 2, '2026-03-05 11:45:00', 7, 'en_attente');
+-- réservation tardive
+(24, 2005, 2, '2026-03-06 10:00:00', 4, 'en_attente'),
+-- gros groupe tard
+(25, 2006, 3, '2026-03-06 10:15:00', 8, 'en_attente'),
+-- petit groupe fin de matinée
+(26, 2007, 4, '2026-03-06 11:00:00', 1, 'en_attente'),
+-- test capacité exacte
+(27, 2008, 5, '2026-03-06 11:30:00', 5, 'en_attente');
