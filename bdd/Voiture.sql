@@ -288,3 +288,23 @@ VALUES
 (26, 2007, 4, '2026-03-06 11:00:00', 1, 'en_attente'),
 -- test capacité exacte
 (27, 2008, 5, '2026-03-06 11:30:00', 5, 'en_attente');
+
+
+données vehicule:
+vehicule 1, 12 place, diesel
+vehicule 2, 5,essence*
+vehicule 3,5, diesel
+vehicule 4,12, essence
+
+, 
+date 12/03/2026
+client1,7passager,09:00:00,hotel 1
+2,11,meme heure,hotel 1
+3,3,meme heure,hotel 1
+4,1,meme heure, hotel 1
+5,2,meme heure,hotel 1
+6,20,meme heure,hotel 1
+
+hotel aeroport 50 vitesse_kmh
+
+vitesse moyenne 50

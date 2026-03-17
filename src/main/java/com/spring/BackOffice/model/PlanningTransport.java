@@ -130,7 +130,12 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         List<Reservation> tranche = reservationsParHeure.get(heure);
 
         // trier par nombre de passagers décroissant
-        tranche.sort((a,b)->Integer.compare(b.getNombrePassagers(),a.getNombrePassagers()));
+        tranche.sort((a, b) -> {
+        int cmp = a.getDateHeureArrive().compareTo(b.getDateHeureArrive());
+        if (cmp != 0) return cmp;
+
+        return Integer.compare(b.getNombrePassagers(), a.getNombrePassagers());
+    });
 
         Set<Long> traitees = new HashSet<>();
 
@@ -246,16 +251,15 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 }
 
 public static List<PlanningTransport> findByDate(JdbcTemplate jdbcTemplate, LocalDate date) {
-        String sql = "SELECT pt.*, r.id_client, r.id_hotel, r.nombre_passagers, r.commentaire, r.date_heure_arrive, h.nom_hotel, v.reference " +
-                     "FROM planning_transport pt " +
-                     "JOIN reservation r ON pt.id_reservation = r.id_reservation " +
-                     "JOIN hotel h ON r.id_hotel = h.id_hotel " +
-                     "JOIN vehicule v ON pt.id_vehicule = v.id " +
-                     "WHERE pt.date_transport = ? " +
-                     "ORDER BY pt.heure_depart";
-        return jdbcTemplate.query(sql, new Object[]{date}, new PlanningTransportRowMapper());
-    }
-
+    String sql = "SELECT pt.*, r.id_client, r.id_hotel, h.nom_hotel, r.nombre_passagers, r.commentaire, r.date_heure_arrive, h.nom_hotel, v.reference " +
+                 "FROM planning_transport pt " +
+                 "JOIN reservation r ON pt.id_reservation = r.id_reservation " +
+                 "JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                 "JOIN vehicule v ON pt.id_vehicule = v.id " +
+                 "WHERE pt.date_transport = ? " +
+                 "ORDER BY v.reference, pt.heure_depart";
+    return jdbcTemplate.query(sql, new Object[]{date}, new PlanningTransportRowMapper());
+}
 
     public static boolean reservationDejaPlanifiee(JdbcTemplate jdbcTemplate, Long idReservation) {
 
