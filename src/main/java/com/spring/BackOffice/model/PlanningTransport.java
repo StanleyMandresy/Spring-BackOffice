@@ -108,50 +108,69 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
     Parametre param = Parametre.getLatest(jdbcTemplate);
     double vitesse = param.getVitesseKmh().doubleValue();
+    int attenteMax = param.getTempsAttenteMinute(); // 🔥 NOUVEAU
 
     Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
-    // disponibilité des véhicules
+    // disponibilité véhicules
     Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
     for (Vehicule v : vehicules) {
         dispoVehicule.put(v.getId(), LocalDateTime.of(date, LocalTime.MIN));
     }
 
-    // Grouper les réservations par heure
-    Map<Integer, List<Reservation>> reservationsParHeure = new HashMap<>();
+    // trier toutes les réservations par heure
+    reservations.sort(Comparator.comparing(Reservation::getDateHeureArrive));
 
-    for (Reservation r : reservations) {
-        int heure = r.getDateHeureArrive().getHours();
-        reservationsParHeure.computeIfAbsent(heure, k -> new ArrayList<>()).add(r);
-    }
+    Set<Long> traitees = new HashSet<>();
 
-    for (Integer heure : reservationsParHeure.keySet()) {
+    int i = 0;
 
-        List<Reservation> tranche = reservationsParHeure.get(heure);
+    while (i < reservations.size()) {
 
-        // trier par nombre de passagers décroissant
-        tranche.sort((a, b) -> {
-        int cmp = a.getDateHeureArrive().compareTo(b.getDateHeureArrive());
-        if (cmp != 0) return cmp;
+        Reservation base = reservations.get(i);
 
-        return Integer.compare(b.getNombrePassagers(), a.getNombrePassagers());
-    });
+        if (traitees.contains(base.getIdReservation())) {
+            i++;
+            continue;
+        }
 
-        Set<Long> traitees = new HashSet<>();
+        LocalDateTime debutFenetre = base.getDateHeureArrive().toLocalDateTime();
+        LocalDateTime finFenetre = debutFenetre.plusMinutes(attenteMax);
 
-        for (Reservation principale : tranche) {
+        // 🔹 construire la fenêtre
+        List<Reservation> fenetre = new ArrayList<>();
+
+        for (Reservation r : reservations) {
+            if (traitees.contains(r.getIdReservation())) continue;
+
+            LocalDateTime t = r.getDateHeureArrive().toLocalDateTime();
+
+            if (!t.isBefore(debutFenetre) && !t.isAfter(finFenetre)) {
+                fenetre.add(r);
+            }
+        }
+
+        // 🔹 tri : heure ASC, puis passagers DESC si égalité
+        fenetre.sort((a, b) -> {
+            int cmp = a.getDateHeureArrive().compareTo(b.getDateHeureArrive());
+            if (cmp != 0) return cmp;
+            return Integer.compare(b.getNombrePassagers(), a.getNombrePassagers());
+        });
+
+        // 🔹 essayer chaque réservation comme principale
+        for (Reservation principale : fenetre) {
 
             if (traitees.contains(principale.getIdReservation())) continue;
 
             int passagers = principale.getNombrePassagers();
 
-            // trouver véhicule le plus proche en capacité
             Vehicule choisi = null;
             int meilleurEcart = Integer.MAX_VALUE;
 
             for (Vehicule v : vehicules) {
 
-                if (dispoVehicule.get(v.getId()).isAfter(principale.getDateHeureArrive().toLocalDateTime()))
+                if (dispoVehicule.get(v.getId())
+                        .isAfter(principale.getDateHeureArrive().toLocalDateTime()))
                     continue;
 
                 int diff = v.getNbrPlace() - passagers;
@@ -169,54 +188,56 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
             groupe.add(principale);
             capaciteRestante -= principale.getNombrePassagers();
-            traitees.add(principale.getIdReservation());
 
-            // remplir avec autres reservations
-            for (Reservation r : tranche) {
+            // 🔹 compléter avec autres de la fenêtre
+            for (Reservation r : fenetre) {
 
+                if (r.getIdReservation() == principale.getIdReservation()) continue;
                 if (traitees.contains(r.getIdReservation())) continue;
 
                 if (r.getNombrePassagers() <= capaciteRestante) {
-
                     groupe.add(r);
                     capaciteRestante -= r.getNombrePassagers();
-                    traitees.add(r.getIdReservation());
                 }
             }
 
-            // heure depart = dernier client
+            // 🔹 heure départ = dernier du groupe
             LocalDateTime heureDepart = groupe.stream()
                     .map(r -> r.getDateHeureArrive().toLocalDateTime())
                     .max(LocalDateTime::compareTo)
                     .orElse(null);
 
-            // trier par distance depuis aeroport
-            groupe.sort((r1,r2)->{
-                Distance d1 = Distance.findByHotels(jdbcTemplate,aeroport.getIdHotel(),r1.getIdHotel());
-                Distance d2 = Distance.findByHotels(jdbcTemplate,aeroport.getIdHotel(),r2.getIdHotel());
+            // 🔹 tri par distance
+            groupe.sort((r1, r2) -> {
+                Distance d1 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r1.getIdHotel());
+                Distance d2 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r2.getIdHotel());
                 return d1.getDistanceKm().compareTo(d2.getDistanceKm());
             });
 
             LocalDateTime heureCourante = heureDepart;
             Hotel position = aeroport;
 
-            for(int i=0;i<groupe.size();i++){
+            for (int j = 0; j < groupe.size(); j++) {
 
-                Reservation res = groupe.get(i);
+                Reservation res = groupe.get(j);
 
-                Distance dist = Distance.findByHotels(jdbcTemplate,position.getIdHotel(),res.getIdHotel());
+                Distance dist = Distance.findByHotels(jdbcTemplate,
+                        position.getIdHotel(),
+                        res.getIdHotel());
 
-                long duree = Math.round((dist.getDistanceKm().doubleValue()/vitesse)*60);
+                long duree = Math.round((dist.getDistanceKm().doubleValue() / vitesse) * 60);
 
                 LocalDateTime arrive = heureCourante.plusMinutes(duree);
 
                 LocalDateTime retour = null;
 
-                if(i==groupe.size()-1){
+                if (j == groupe.size() - 1) {
 
-                    Distance retourDist = Distance.findByHotels(jdbcTemplate,res.getIdHotel(),aeroport.getIdHotel());
+                    Distance retourDist = Distance.findByHotels(jdbcTemplate,
+                            res.getIdHotel(),
+                            aeroport.getIdHotel());
 
-                    long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue()/vitesse)*60);
+                    long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue() / vitesse) * 60);
 
                     retour = arrive.plusMinutes(dureeRetour);
 
@@ -233,19 +254,24 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 );
 
                 planning.save(jdbcTemplate);
+                Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "planifie");
 
-                Reservation.updateStatut(jdbcTemplate,res.getIdReservation(),"planifie");
+                traitees.add(res.getIdReservation());
 
                 heureCourante = arrive;
-                position = Hotel.findById(jdbcTemplate,res.getIdHotel());
+                position = Hotel.findById(jdbcTemplate, res.getIdHotel());
             }
+
+            break; // 🔥 important : on traite un groupe à la fois
         }
+
+        i++;
     }
 
-    // annuler les non planifiés
-    for(Reservation r:reservations){
-        if(!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate,r.getIdReservation())){
-            Reservation.updateStatut(jdbcTemplate,r.getIdReservation(),"annule");
+    // annulation
+    for (Reservation r : reservations) {
+        if (!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate, r.getIdReservation())) {
+            Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
         }
     }
 }
