@@ -233,51 +233,47 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
             int nbVehiculesUtilises = 0;
 
+            // 🔥 AMÉLIORATION BIN PACKING: Chercher UNE voiture qui peut contenir TOUS les passagers
+            // Utilise Best Fit: choisit la plus petite capacité qui peut contenir (minimise gaspillage)
+            Vehicule vehiculeParfait = null;
+            int meilleureCapacite = Integer.MAX_VALUE;
+            
             for (Vehicule v : vehiculesDispo) {
+                if (v.getNbrPlace() >= principale.getNombrePassagers()) {
+                    // Si cette voiture est meilleure (plus petite) que la précédente
+                    if (v.getNbrPlace() < meilleureCapacite) {
+                        vehiculeParfait = v;
+                        meilleureCapacite = v.getNbrPlace();
+                    }
+                }
+            }
 
-                if (restant <= 0) break;
-
-                int pris = Math.min(restant, v.getNbrPlace());
-
-                // 🔹 trajet aller
-                Distance dist = Distance.findByHotels(
-                        jdbcTemplate,
-                        positionDepart.getIdHotel(),
-                        principale.getIdHotel()
+            if (vehiculeParfait != null) {
+                // ✅ CAS IDÉAL: Toute la réservation dans une seule voiture
+                allocateToVehicule(
+                    principale, vehiculeParfait, principale.getNombrePassagers(),
+                    date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
+                    dispoVehicule, nbTrajetsVehicule
                 );
+                restant = 0;
+                nbVehiculesUtilises = 1;
+            } else {
+                // ⚠️ FALLBACK: Splitter si aucune voiture ne peut contenir le groupe complet
+                for (Vehicule v : vehiculesDispo) {
 
-                long duree = Math.round((dist.getDistanceKm().doubleValue() / vitesse) * 60);
-                LocalDateTime arrive = heureDepart.plusMinutes(duree);
+                    if (restant <= 0) break;
 
-                // 🔹 retour
-                Distance retourDist = Distance.findByHotels(
-                        jdbcTemplate,
-                        principale.getIdHotel(),
-                        aeroport.getIdHotel()
-                );
+                    int pris = Math.min(restant, v.getNbrPlace());
 
-                long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue() / vitesse) * 60);
-                LocalDateTime retour = arrive.plusMinutes(dureeRetour);
+                    allocateToVehicule(
+                        principale, v, pris,
+                        date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
+                        dispoVehicule, nbTrajetsVehicule
+                    );
 
-                // 🔥 création planning (SPLIT)
-                PlanningTransport pt = new PlanningTransport(
-                        principale,
-                        v,
-                        date,
-                        heureDepart,
-                        arrive,
-                        retour
-                );
-
-                pt.setNombrePassagersTransportes(pris);
-                pt.save(jdbcTemplate);
-
-                // 🔹 update véhicule
-                dispoVehicule.put(v.getId(), retour);
-                nbTrajetsVehicule.put(v.getId(), nbTrajetsVehicule.get(v.getId()) + 1);
-
-                restant -= pris;
-                nbVehiculesUtilises++;
+                    restant -= pris;
+                    nbVehiculesUtilises++;
+                }
             }
 
             // 🔥 DETECTION SPLIT
@@ -309,6 +305,58 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
         }
     }
+}
+
+// 🔥 HELPER METHOD: Alloue une réservation à un véhicule avec calcul de trajets
+private static void allocateToVehicule(
+        Reservation principale,
+        Vehicule vehicule,
+        int nombrePassagers,
+        LocalDate date,
+        LocalDateTime heureDepart,
+        Hotel positionDepart,
+        Hotel aeroport,
+        double vitesse,
+        JdbcTemplate jdbcTemplate,
+        Map<Long, LocalDateTime> dispoVehicule,
+        Map<Long, Integer> nbTrajetsVehicule) {
+
+    // 🔹 trajet aller
+    Distance dist = Distance.findByHotels(
+            jdbcTemplate,
+            positionDepart.getIdHotel(),
+            principale.getIdHotel()
+    );
+
+    long duree = Math.round((dist.getDistanceKm().doubleValue() / vitesse) * 60);
+    LocalDateTime arrive = heureDepart.plusMinutes(duree);
+
+    // 🔹 retour
+    Distance retourDist = Distance.findByHotels(
+            jdbcTemplate,
+            principale.getIdHotel(),
+            aeroport.getIdHotel()
+    );
+
+    long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue() / vitesse) * 60);
+    LocalDateTime retour = arrive.plusMinutes(dureeRetour);
+
+    // 🔥 création planning
+    PlanningTransport pt = new PlanningTransport(
+            principale,
+            vehicule,
+            date,
+            heureDepart,
+            arrive,
+            retour
+    );
+
+    pt.setNombrePassagersTransportes(nombrePassagers);
+    pt.save(jdbcTemplate);
+
+    // 🔹 update véhicule
+    dispoVehicule.put(vehicule.getId(), retour);
+    nbTrajetsVehicule.put(vehicule.getId(), nbTrajetsVehicule.get(vehicule.getId()) + 1);
 }
 
 public static List<PlanningTransport> findByDate(JdbcTemplate jdbcTemplate, LocalDate date) {
