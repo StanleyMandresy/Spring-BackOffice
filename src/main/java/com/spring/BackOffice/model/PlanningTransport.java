@@ -159,8 +159,11 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         nbTrajetsVehicule.put(v.getId(), 0);
     }
 
-    // 🔹 tri initial par heure
-    reservations.sort(Comparator.comparing(Reservation::getDateHeureArrive));
+    // � TRI INITIAL: par nombre de passagers DÉCROISSANT (Decreasing First Fit)
+    // Les gros groupes sont traités en premier pour un meilleur bin packing
+    reservations.sort((a, b) ->
+            Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
+    );
 
     Set<Long> traitees = new HashSet<>();
     int i = 0;
@@ -173,6 +176,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             continue;
         }
 
+        // 🔹 créer une fenêtre basée sur le temps d'arrivée du groupe principal
         LocalDateTime debutFenetre = base.getDateHeureArrive().toLocalDateTime();
         LocalDateTime finFenetre = debutFenetre.plusMinutes(attenteMax);
 
