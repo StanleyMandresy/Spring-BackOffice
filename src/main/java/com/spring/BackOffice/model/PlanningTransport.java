@@ -262,21 +262,41 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 restant = 0;
                 nbVehiculesUtilises = 1;
             } else {
-                // ⚠️ FALLBACK: Splitter si aucune voiture ne peut contenir le groupe complet
-                for (Vehicule v : vehiculesDispo) {
+                // ⚠️ FALLBACK: split intelligent (évite les découpes inutiles type 1+1)
+                List<Vehicule> vehiculesRestants = new ArrayList<>(vehiculesDispo);
 
-                    if (restant <= 0) break;
+                while (restant > 0 && !vehiculesRestants.isEmpty()) {
+                    Vehicule vehiculeChoisi = null;
 
-                    int pris = Math.min(restant, v.getNbrPlace());
+                    // 1) Priorité: un véhicule qui peut prendre tout le restant (best-fit)
+                    int meilleureCapaciteLocale = Integer.MAX_VALUE;
+                    for (Vehicule v : vehiculesRestants) {
+                        if (v.getNbrPlace() >= restant && v.getNbrPlace() < meilleureCapaciteLocale) {
+                            vehiculeChoisi = v;
+                            meilleureCapaciteLocale = v.getNbrPlace();
+                        }
+                    }
+
+                    // 2) Sinon: prendre le plus grand véhicule disponible
+                    if (vehiculeChoisi == null) {
+                        for (Vehicule v : vehiculesRestants) {
+                            if (vehiculeChoisi == null || v.getNbrPlace() > vehiculeChoisi.getNbrPlace()) {
+                                vehiculeChoisi = v;
+                            }
+                        }
+                    }
+
+                    int pris = Math.min(restant, vehiculeChoisi.getNbrPlace());
 
                     allocateToVehicule(
-                        principale, v, pris,
-                        date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
-                        dispoVehicule, nbTrajetsVehicule
+                            principale, vehiculeChoisi, pris,
+                            date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
+                            dispoVehicule, nbTrajetsVehicule
                     );
 
                     restant -= pris;
                     nbVehiculesUtilises++;
+                    vehiculesRestants.remove(vehiculeChoisi);
                 }
             }
 
