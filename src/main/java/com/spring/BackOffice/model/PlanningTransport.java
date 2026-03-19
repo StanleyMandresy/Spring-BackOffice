@@ -147,19 +147,19 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
     Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
-    // 🔹 dispo véhicules
+    // 🔹 disponibilité véhicules
     Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
     for (Vehicule v : vehicules) {
         dispoVehicule.put(v.getId(), LocalDateTime.of(date, LocalTime.MIN));
     }
 
-    // 🔹 nombre trajets
+    // 🔹 nombre de trajets par véhicule
     Map<Long, Integer> nbTrajetsVehicule = new HashMap<>();
     for (Vehicule v : vehicules) {
         nbTrajetsVehicule.put(v.getId(), 0);
     }
 
-    // 🔹 tri par heure
+    // 🔹 tri initial par heure
     reservations.sort(Comparator.comparing(Reservation::getDateHeureArrive));
 
     Set<Long> traitees = new HashSet<>();
@@ -176,7 +176,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         LocalDateTime debutFenetre = base.getDateHeureArrive().toLocalDateTime();
         LocalDateTime finFenetre = debutFenetre.plusMinutes(attenteMax);
 
-        // 🔹 construire fenêtre
+        // 🔹 construire la fenêtre
         List<Reservation> fenetre = new ArrayList<>();
         for (Reservation r : reservations) {
             if (traitees.contains(r.getIdReservation())) continue;
@@ -187,21 +187,21 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             }
         }
 
-        // 🔹 tri : heure puis passagers desc
-        fenetre.sort((a, b) -> {
-            int cmp = a.getDateHeureArrive().compareTo(b.getDateHeureArrive());
-            if (cmp != 0) return cmp;
-            return Integer.compare(b.getNombrePassagers(), a.getNombrePassagers());
-        });
+        // 🔥 TRI : uniquement par nombre de passagers DESC
+        fenetre.sort((a, b) ->
+                Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
+        );
 
-        // 🔥 TRAITEMENT AVEC SPLIT
+        boolean splitDansFenetre = false;
+
+        // 🔥 TRAITEMENT
         for (Reservation principale : fenetre) {
 
             if (traitees.contains(principale.getIdReservation())) continue;
 
             int restant = principale.getNombrePassagers();
 
-            // 🔹 véhicules disponibles triés intelligemment
+            // 🔹 véhicules disponibles
             List<Vehicule> vehiculesDispo = new ArrayList<>();
             for (Vehicule v : vehicules) {
                 if (!dispoVehicule.get(v.getId())
@@ -210,7 +210,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 }
             }
 
-            // 🔹 tri véhicules :
+            // 🔹 tri véhicules (priorité logique existante)
             vehiculesDispo.sort((v1, v2) -> {
                 int t1 = nbTrajetsVehicule.get(v1.getId());
                 int t2 = nbTrajetsVehicule.get(v2.getId());
@@ -228,10 +228,10 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
             if (vehiculesDispo.isEmpty()) continue;
 
-            // 🔹 heure de départ = heure arrivée principale
             LocalDateTime heureDepart = principale.getDateHeureArrive().toLocalDateTime();
-
             Hotel positionDepart = aeroport;
+
+            int nbVehiculesUtilises = 0;
 
             for (Vehicule v : vehiculesDispo) {
 
@@ -239,7 +239,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
                 int pris = Math.min(restant, v.getNbrPlace());
 
-                // 🔹 calcul trajet aller
+                // 🔹 trajet aller
                 Distance dist = Distance.findByHotels(
                         jdbcTemplate,
                         positionDepart.getIdHotel(),
@@ -249,7 +249,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 long duree = Math.round((dist.getDistanceKm().doubleValue() / vitesse) * 60);
                 LocalDateTime arrive = heureDepart.plusMinutes(duree);
 
-                // 🔹 calcul retour
+                // 🔹 retour
                 Distance retourDist = Distance.findByHotels(
                         jdbcTemplate,
                         principale.getIdHotel(),
@@ -259,7 +259,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue() / vitesse) * 60);
                 LocalDateTime retour = arrive.plusMinutes(dureeRetour);
 
-                // 🔥 création planning SPLIT
+                // 🔥 création planning (SPLIT)
                 PlanningTransport pt = new PlanningTransport(
                         principale,
                         v,
@@ -269,9 +269,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                         retour
                 );
 
-                // ⚠️ IMPORTANT : à ajouter dans ta classe
                 pt.setNombrePassagersTransportes(pris);
-
                 pt.save(jdbcTemplate);
 
                 // 🔹 update véhicule
@@ -279,9 +277,15 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 nbTrajetsVehicule.put(v.getId(), nbTrajetsVehicule.get(v.getId()) + 1);
 
                 restant -= pris;
+                nbVehiculesUtilises++;
             }
 
-            // 🔹 statut réservation
+            // 🔥 DETECTION SPLIT
+            if (nbVehiculesUtilises > 1) {
+                splitDansFenetre = true;
+            }
+
+            // 🔹 statut
             if (restant == 0) {
                 Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
             } else {
@@ -289,6 +293,11 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             }
 
             traitees.add(principale.getIdReservation());
+
+            // 🔥 SI SPLIT → on stop la fenêtre
+            if (splitDansFenetre) {
+                break;
+            }
         }
 
         i++;
