@@ -308,3 +308,26 @@ client1,7passager,09:00:00,hotel 1
 hotel aeroport 50 vitesse_kmh
 
 vitesse moyenne 50
+
+-- 🔄 Reset des données
+TRUNCATE TABLE reservation CASCADE;
+
+-- 📥 Insertion des réservations
+INSERT INTO reservation (
+    id_reservation,
+    id_client,
+    id_hotel,
+    nombre_passagers,
+    date_heure_arrive,
+    statut,
+    commentaire
+) VALUES
+
+-- 🔥 Fenêtre principale (test SPLIT)
+(21, 'T001', 2, 7,  '2026-03-17 08:00:00', 'en_attente', NULL),
+(22, 'T002', 2, 11, '2026-03-17 08:05:00', 'en_attente', NULL),
+(23, 'T003', 2, 3,  '2026-03-17 08:10:00', 'en_attente', NULL),
+(24, 'T004', 2, 15, '2026-03-17 08:12:00', 'en_attente', NULL),
+
+-- 🧪 Petit groupe après (test retour véhicule)
+(25, 'T005', 2, 4,  '2026-03-17 09:00:00', 'en_attente', NULL);
