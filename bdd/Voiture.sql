@@ -22,7 +22,7 @@ CREATE TABLE lieu (
     actif BOOLEAN DEFAULT TRUE
 );
 
-Hôtels (destinations)
+-- Hôtels (destinations)
 CREATE TABLE hotel (
     id_hotel SERIAL PRIMARY KEY,
     nom_hotel VARCHAR(100) NOT NULL,
@@ -57,10 +57,10 @@ CREATE TABLE client (
     contact VARCHAR(50),
     email VARCHAR(100),
     id_categorie INTEGER REFERENCES categorie_client(id_categorie),
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_creation DATE,
     actif BOOLEAN DEFAULT TRUE
 );
-
+    
 -- Chauffeurs
 CREATE TABLE chauffeur (
     id_chauffeur SERIAL PRIMARY KEY,

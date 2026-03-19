@@ -6,10 +6,27 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 
 public class PlanningTransport {
+
+    private static class FenetreDisponibilite {
+        private final LocalDateTime debut;
+        private final LocalDateTime fin;
+
+        FenetreDisponibilite(LocalDateTime debut, LocalDateTime fin) {
+            this.debut = debut;
+            this.fin = fin;
+        }
+
+        public LocalDateTime getDebut() {
+            return debut;
+        }
+
+        public LocalDateTime getFin() {
+            return fin;
+        }
+    }
 
 
 
@@ -83,6 +100,39 @@ public class PlanningTransport {
         return heureRetour != null;
     }
 
+    private static Map<Long, FenetreDisponibilite> chargerDisponibilitesVehicules(JdbcTemplate jdbcTemplate, LocalDate date) {
+        String sql = "SELECT id_vehicule, date_heure_disponible_debut, date_heure_disponible_fin " +
+                     "FROM voiture_disponible " +
+                     "WHERE date_heure_disponible_debut::date <= ? AND date_heure_disponible_fin::date >= ?";
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, date, date);
+
+        Map<Long, FenetreDisponibilite> disponibilites = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            Long idVehicule = ((Number) row.get("id_vehicule")).longValue();
+            java.sql.Timestamp debutTs = (java.sql.Timestamp) row.get("date_heure_disponible_debut");
+            java.sql.Timestamp finTs = (java.sql.Timestamp) row.get("date_heure_disponible_fin");
+
+            if (debutTs == null || finTs == null) {
+                continue;
+            }
+
+            LocalDateTime debut = debutTs.toLocalDateTime();
+            LocalDateTime fin = finTs.toLocalDateTime();
+
+            FenetreDisponibilite existante = disponibilites.get(idVehicule);
+            if (existante == null) {
+                disponibilites.put(idVehicule, new FenetreDisponibilite(debut, fin));
+            } else {
+                LocalDateTime nouveauDebut = debut.isBefore(existante.getDebut()) ? debut : existante.getDebut();
+                LocalDateTime nouveauFin = fin.isAfter(existante.getFin()) ? fin : existante.getFin();
+                disponibilites.put(idVehicule, new FenetreDisponibilite(nouveauDebut, nouveauFin));
+            }
+        }
+
+        return disponibilites;
+    }
+
      public void save(JdbcTemplate jdbcTemplate) {
 
         String sql = "INSERT INTO planning_transport\n" +
@@ -112,10 +162,15 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
     Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
+    Map<Long, FenetreDisponibilite> fenetresDisponibilite = chargerDisponibilitesVehicules(jdbcTemplate, date);
+
     // 🔹 disponibilité véhicules
     Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
     for (Vehicule v : vehicules) {
-        dispoVehicule.put(v.getId(), LocalDateTime.of(date, LocalTime.MIN));
+        FenetreDisponibilite fenetre = fenetresDisponibilite.get(v.getId());
+        if (fenetre != null) {
+            dispoVehicule.put(v.getId(), fenetre.getDebut());
+        }
     }
 
     // 🔹 suivi nombre de trajets par véhicule
@@ -168,6 +223,16 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             // 🔹 choix du véhicule selon critères hiérarchiques
             Vehicule choisi = null;
             for (Vehicule v : vehicules) {
+
+                FenetreDisponibilite fenetre = fenetresDisponibilite.get(v.getId());
+                if (fenetre == null) {
+                    continue;
+                }
+
+                LocalDateTime arriveePrincipale = principale.getDateHeureArrive().toLocalDateTime();
+                if (arriveePrincipale.isBefore(fenetre.getDebut()) || arriveePrincipale.isAfter(fenetre.getFin())) {
+                    continue;
+                }
 
                 if (dispoVehicule.get(v.getId())
                         .isAfter(principale.getDateHeureArrive().toLocalDateTime()))
@@ -235,6 +300,32 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 Distance d2 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r2.getIdHotel());
                 return d1.getDistanceKm().compareTo(d2.getDistanceKm());
             });
+
+            FenetreDisponibilite fenetreChoisie = fenetresDisponibilite.get(choisi.getId());
+            if (fenetreChoisie != null) {
+                LocalDateTime heureCheck = heureDepart;
+                Hotel positionCheck = aeroport;
+
+                for (Reservation resCheck : groupe) {
+                    Distance distCheck = Distance.findByHotels(jdbcTemplate,
+                            positionCheck.getIdHotel(),
+                            resCheck.getIdHotel());
+
+                    long dureeCheck = Math.round((distCheck.getDistanceKm().doubleValue() / vitesse) * 60);
+                    heureCheck = heureCheck.plusMinutes(dureeCheck);
+                    positionCheck = Hotel.findById(jdbcTemplate, resCheck.getIdHotel());
+                }
+
+                Distance retourCheck = Distance.findByHotels(jdbcTemplate,
+                        positionCheck.getIdHotel(),
+                        aeroport.getIdHotel());
+                long dureeRetourCheck = Math.round((retourCheck.getDistanceKm().doubleValue() / vitesse) * 60);
+                LocalDateTime finTrajetPrevue = heureCheck.plusMinutes(dureeRetourCheck);
+
+                if (finTrajetPrevue.isAfter(fenetreChoisie.getFin())) {
+                    continue;
+                }
+            }
 
             LocalDateTime heureCourante = heureDepart;
             Hotel position = aeroport;
