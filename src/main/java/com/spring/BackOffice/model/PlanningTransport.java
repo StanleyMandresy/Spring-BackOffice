@@ -1,3 +1,4 @@
+
 package com.spring.BackOffice.model;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,11 +40,6 @@ public class PlanningTransport {
     private LocalDateTime heureDepart;
     private LocalDateTime heureArrive;
     private LocalDateTime heureRetour; // null sauf dernier client
- 
-
-
-
-    private int nombrePassagersTransportes;
 
     public PlanningTransport(
             Reservation reservation,
@@ -59,25 +55,6 @@ public class PlanningTransport {
         this.heureDepart = heureDepart;
         this.heureArrive = heureArrive;
         this.heureRetour = heureRetour;
-    }
-
-
-    public PlanningTransport(
-            Reservation reservation,
-            Vehicule vehicule,
-            LocalDate date,
-            LocalDateTime heureDepart,
-            LocalDateTime heureArrive,
-            LocalDateTime heureRetour,
-            int nombrePassagersTransportes) {
-
-        this.reservation = reservation;
-        this.vehicule = vehicule;
-        this.date = date;
-        this.heureDepart = heureDepart;
-        this.heureArrive = heureArrive;
-        this.heureRetour = heureRetour;
-        this.nombrePassagersTransportes=nombrePassagersTransportes;
     }
 
  
@@ -114,16 +91,6 @@ public class PlanningTransport {
 
     public LocalDateTime getHeureRetour() {
         return heureRetour;
-    }
-
-       public int getNombrePassagersTransportes() {
-        return nombrePassagersTransportes;
-    }
-
-
-
-    public void setNombrePassagersTransportes(int nombrePassagersTransportes) {
-        this.nombrePassagersTransportes = nombrePassagersTransportes;
     }
 
     // ==========================
@@ -171,8 +138,8 @@ public class PlanningTransport {
 
         String sql = "INSERT INTO planning_transport\n" +
                 "            (id_reservation, id_vehicule, date_transport,\n" +
-                "             heure_depart, heure_arrive, heure_retour, nombre_passagers_transportes)\n" +
-                "            VALUES (?, ?, ?, ?, ?, ?,?)\n" +
+                "             heure_depart, heure_arrive, heure_retour)\n" +
+                "            VALUES (?, ?, ?, ?, ?, ?)\n" +
                 "        ";
 
         jdbcTemplate.update(
@@ -182,8 +149,7 @@ public class PlanningTransport {
                 date,
                 heureDepart,
                 heureArrive,
-                heureRetour,
-                nombrePassagersTransportes
+                heureRetour
         );
     }
 public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
@@ -193,7 +159,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
     Parametre param = Parametre.getLatest(jdbcTemplate);
     double vitesse = param.getVitesseKmh().doubleValue();
-    int attenteMax = param.getTempsAttenteMinute();
+    int attenteMax = param.getTempsAttenteMinute(); // fenêtre d'attente
 
     Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
@@ -208,13 +174,13 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         }
     }
 
-    // 🔹 nombre de trajets par véhicule
+    // 🔹 suivi nombre de trajets par véhicule
     Map<Long, Integer> nbTrajetsVehicule = new HashMap<>();
     for (Vehicule v : vehicules) {
         nbTrajetsVehicule.put(v.getId(), 0);
     }
 
-    // 🔹 tri initial par heure
+    // 🔹 trier les réservations par heure d’arrivée
     reservations.sort(Comparator.comparing(Reservation::getDateHeureArrive));
 
     Set<Long> traitees = new HashSet<>();
@@ -231,136 +197,196 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         LocalDateTime debutFenetre = base.getDateHeureArrive().toLocalDateTime();
         LocalDateTime finFenetre = debutFenetre.plusMinutes(attenteMax);
 
-        // 🔹 construire la fenêtre
+        // 🔹 construire la fenêtre de réservation à traiter
         List<Reservation> fenetre = new ArrayList<>();
         for (Reservation r : reservations) {
             if (traitees.contains(r.getIdReservation())) continue;
-
             LocalDateTime t = r.getDateHeureArrive().toLocalDateTime();
             if (!t.isBefore(debutFenetre) && !t.isAfter(finFenetre)) {
                 fenetre.add(r);
             }
         }
 
-        // 🔥 TRI : uniquement par nombre de passagers DESC
-        fenetre.sort((a, b) ->
-                Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
-        );
+        // 🔹 tri heure asc, puis passagers desc
+        fenetre.sort((a, b) -> {
+            int cmp = a.getDateHeureArrive().compareTo(b.getDateHeureArrive());
+            if (cmp != 0) return cmp;
+            return Integer.compare(b.getNombrePassagers(), a.getNombrePassagers());
+        });
 
-        boolean splitDansFenetre = false;
-
-        // 🔥 TRAITEMENT
+        // 🔹 traiter chaque réservation comme principale
         for (Reservation principale : fenetre) {
 
             if (traitees.contains(principale.getIdReservation())) continue;
 
-            int restant = principale.getNombrePassagers();
+            int passagers = principale.getNombrePassagers();
 
-            // 🔹 véhicules disponibles
-            List<Vehicule> vehiculesDispo = new ArrayList<>();
+            // 🔹 choix du véhicule selon critères hiérarchiques
+            Vehicule choisi = null;
             for (Vehicule v : vehicules) {
-                if (!dispoVehicule.get(v.getId())
-                        .isAfter(principale.getDateHeureArrive().toLocalDateTime())) {
-                    vehiculesDispo.add(v);
+
+                FenetreDisponibilite fenetres = fenetresDisponibilite.get(v.getId());
+                if (fenetres == null) {
+                    continue;
+                }
+
+                LocalDateTime arriveePrincipale = principale.getDateHeureArrive().toLocalDateTime();
+                if (arriveePrincipale.isBefore(fenetres.getDebut()) || arriveePrincipale.isAfter(fenetres.getFin())) {
+                    continue;
+                }
+
+                if (dispoVehicule.get(v.getId())
+                        .isAfter(principale.getDateHeureArrive().toLocalDateTime()))
+                    continue;
+
+                int diff = v.getNbrPlace() - passagers;
+                if (diff < 0) continue; // capacité insuffisante
+
+                if (choisi == null) {
+                    choisi = v;
+                    continue;
+                }
+
+                int trajetsV = nbTrajetsVehicule.get(v.getId());
+                int trajetsChoisi = nbTrajetsVehicule.get(choisi.getId());
+                int diffChoisi = choisi.getNbrPlace() - passagers;
+
+                // 1️⃣ moins de trajets prioritaire
+                if (trajetsV < trajetsChoisi) {
+                    choisi = v;
+                }
+                // 2️⃣ si égalité → meilleur fit capacité
+                else if (trajetsV == trajetsChoisi) {
+                    if (diff < diffChoisi) {
+                        choisi = v;
+                    }
+                    // 3️⃣ si encore égalité → diesel prioritaire
+                    else if (diff == diffChoisi) {
+                        boolean vDiesel = v.getTypeCarburant().equals("D");
+                        boolean choisiDiesel = choisi.getTypeCarburant().equals("D");
+                        if (vDiesel && !choisiDiesel) {
+                            choisi = v;
+                        }
+                    }
                 }
             }
 
-            // 🔹 tri véhicules (priorité logique existante)
-            vehiculesDispo.sort((v1, v2) -> {
-                int t1 = nbTrajetsVehicule.get(v1.getId());
-                int t2 = nbTrajetsVehicule.get(v2.getId());
+            if (choisi == null) continue;
 
-                if (t1 != t2) return Integer.compare(t1, t2);
+            int capaciteRestante = choisi.getNbrPlace();
+            List<Reservation> groupe = new ArrayList<>();
+            groupe.add(principale);
+            capaciteRestante -= principale.getNombrePassagers();
 
-                int capDiff = v2.getNbrPlace() - v1.getNbrPlace();
-                if (capDiff != 0) return capDiff;
+            // 🔹 compléter le groupe avec les autres de la fenêtre
+            for (Reservation r : fenetre) {
+                if (r.getIdReservation() == principale.getIdReservation()) continue;
+                if (traitees.contains(r.getIdReservation())) continue;
 
-                boolean d1 = v1.getTypeCarburant().equals("D");
-                boolean d2 = v2.getTypeCarburant().equals("D");
+                if (r.getNombrePassagers() <= capaciteRestante) {
+                    groupe.add(r);
+                    capaciteRestante -= r.getNombrePassagers();
+                }
+            }
 
-                return Boolean.compare(d2, d1);
+            // 🔹 heure départ = dernier du groupe
+            LocalDateTime heureDepart = groupe.stream()
+                    .map(r -> r.getDateHeureArrive().toLocalDateTime())
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+
+            // 🔹 trier par distance depuis l'aéroport
+            groupe.sort((r1, r2) -> {
+                Distance d1 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r1.getIdHotel());
+                Distance d2 = Distance.findByHotels(jdbcTemplate, aeroport.getIdHotel(), r2.getIdHotel());
+                return d1.getDistanceKm().compareTo(d2.getDistanceKm());
             });
 
-            if (vehiculesDispo.isEmpty()) continue;
+            FenetreDisponibilite fenetreChoisie = fenetresDisponibilite.get(choisi.getId());
+            if (fenetreChoisie != null) {
+                LocalDateTime heureCheck = heureDepart;
+                Hotel positionCheck = aeroport;
 
-            LocalDateTime heureDepart = principale.getDateHeureArrive().toLocalDateTime();
-            Hotel positionDepart = aeroport;
+                for (Reservation resCheck : groupe) {
+                    Distance distCheck = Distance.findByHotels(jdbcTemplate,
+                            positionCheck.getIdHotel(),
+                            resCheck.getIdHotel());
 
-            int nbVehiculesUtilises = 0;
+                    long dureeCheck = Math.round((distCheck.getDistanceKm().doubleValue() / vitesse) * 60);
+                    heureCheck = heureCheck.plusMinutes(dureeCheck);
+                    positionCheck = Hotel.findById(jdbcTemplate, resCheck.getIdHotel());
+                }
 
-            for (Vehicule v : vehiculesDispo) {
+                Distance retourCheck = Distance.findByHotels(jdbcTemplate,
+                        positionCheck.getIdHotel(),
+                        aeroport.getIdHotel());
+                long dureeRetourCheck = Math.round((retourCheck.getDistanceKm().doubleValue() / vitesse) * 60);
+                LocalDateTime finTrajetPrevue = heureCheck.plusMinutes(dureeRetourCheck);
 
-                if (restant <= 0) break;
+                if (finTrajetPrevue.isAfter(fenetreChoisie.getFin())) {
+                    continue;
+                }
+            }
 
-                int pris = Math.min(restant, v.getNbrPlace());
+            LocalDateTime heureCourante = heureDepart;
+            Hotel position = aeroport;
 
-                // 🔹 trajet aller
-                Distance dist = Distance.findByHotels(
-                        jdbcTemplate,
-                        positionDepart.getIdHotel(),
-                        principale.getIdHotel()
-                );
+            for (int j = 0; j < groupe.size(); j++) {
+
+                Reservation res = groupe.get(j);
+
+                Distance dist = Distance.findByHotels(jdbcTemplate,
+                        position.getIdHotel(),
+                        res.getIdHotel());
 
                 long duree = Math.round((dist.getDistanceKm().doubleValue() / vitesse) * 60);
-                LocalDateTime arrive = heureDepart.plusMinutes(duree);
+                LocalDateTime arrive = heureCourante.plusMinutes(duree);
 
-                // 🔹 retour
-                Distance retourDist = Distance.findByHotels(
-                        jdbcTemplate,
-                        principale.getIdHotel(),
-                        aeroport.getIdHotel()
-                );
+                LocalDateTime retour = null;
 
-                long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue() / vitesse) * 60);
-                LocalDateTime retour = arrive.plusMinutes(dureeRetour);
+                if (j == groupe.size() - 1) {
+                    Distance retourDist = Distance.findByHotels(jdbcTemplate,
+                            res.getIdHotel(),
+                            aeroport.getIdHotel());
 
-                // 🔥 création planning (SPLIT)
-                PlanningTransport pt = new PlanningTransport(
-                        principale,
-                        v,
+                    long dureeRetour = Math.round((retourDist.getDistanceKm().doubleValue() / vitesse) * 60);
+                    retour = arrive.plusMinutes(dureeRetour);
+
+                    dispoVehicule.put(choisi.getId(), retour);
+
+                    // 🔹 incrément nombre de trajets
+                    nbTrajetsVehicule.put(
+                            choisi.getId(),
+                            nbTrajetsVehicule.get(choisi.getId()) + 1
+                    );
+                }
+
+                PlanningTransport planning = new PlanningTransport(
+                        res,
+                        choisi,
                         date,
-                        heureDepart,
+                        heureCourante,
                         arrive,
                         retour
                 );
+                planning.save(jdbcTemplate);
+                Reservation.updateStatut(jdbcTemplate, res.getIdReservation(), "planifie");
 
-                pt.setNombrePassagersTransportes(pris);
-                pt.save(jdbcTemplate);
+                traitees.add(res.getIdReservation());
 
-                // 🔹 update véhicule
-                dispoVehicule.put(v.getId(), retour);
-                nbTrajetsVehicule.put(v.getId(), nbTrajetsVehicule.get(v.getId()) + 1);
-
-                restant -= pris;
-                nbVehiculesUtilises++;
+                heureCourante = arrive;
+                position = Hotel.findById(jdbcTemplate, res.getIdHotel());
             }
 
-            // 🔥 DETECTION SPLIT
-            if (nbVehiculesUtilises > 1) {
-                splitDansFenetre = true;
-            }
-
-            // 🔹 statut
-            if (restant == 0) {
-                Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
-            } else {
-                Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "partiel");
-            }
-
-            traitees.add(principale.getIdReservation());
-
-            // 🔥 SI SPLIT → on stop la fenêtre
-            if (splitDansFenetre) {
-                break;
-            }
+            break; // un seul groupe traité par fenêtre
         }
 
         i++;
     }
 
-    // 🔹 annuler non traitées
+    // 🔹 annuler les non planifiés
     for (Reservation r : reservations) {
-        if (!traitees.contains(r.getIdReservation())) {
+        if (!PlanningTransport.reservationDejaPlanifiee(jdbcTemplate, r.getIdReservation())) {
             Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
         }
     }
