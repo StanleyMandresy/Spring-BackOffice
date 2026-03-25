@@ -24,10 +24,8 @@ INSERT INTO reservation (
 (16, 'C006', 2, 20, '2026-03-12 09:00:00', 'en_attente', NULL);
 ------------------------sprint 2------------------------
 INSERT INTO vehicule (reference, nbrPlace, type_carburant) VALUES
-('VEH-001', 12, 'D'),
-('VEH-002', 5, 'ES'),
-('VEH-003', 5, 'D'),
-('VEH-004', 12, 'ES');
+('VEH-001', 6, 'D'),
+('VEH-002', 5, 'ES');
 
 -------------------------sprint 3------------------------
 

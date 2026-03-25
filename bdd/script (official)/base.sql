@@ -94,3 +94,7 @@ CREATE TABLE planning_transport (
     heure_arrive TIMESTAMP NOT NULL,
     heure_retour TIMESTAMP NULL
 );
+
+------------------ sprint 7 --------------------------
+ALTER TABLE planning_transport
+ADD nombre_passagers_transportes INT;
