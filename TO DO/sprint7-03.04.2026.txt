@@ -1,0 +1,36 @@
+TL: ETU003118
+Dev:ETU003209
+    ETU003111
+
+BackOffice
+    -feature/fractionnementReservations: ETU003209
+    -feature/triParNombrePassagers: ETU003111
+    -feature/remplissageOptimalVehicules: ETU003209
+    -feature/prioriteRemplissageComplet: ETU003111
+    -feature/gestionReservationsPartielles: ETU003209
+FrontOffice
+    -feature/visualisationFractionnement: ETU003111
+    -feature/notificationReservationDivisee: ETU003209
+
+Sprint 7 - Fractionnement des réservations
+Objectif: Permettre la division des réservations pour optimiser le remplissage
+
+Règles métier:
+    - Réservation peut être fractionnée en plusieurs voyages
+    - Tri par nombre de passagers (ordre décroissant)
+    - Remplir les véhicules au maximum de leur capacité
+    - Priorité aux véhicules pouvant être remplis complètement
+
+Table modifications
+    -reservations
+        peut_etre_fractionnee (boolean)
+        id_reservation_parent (nullable)
+    -fractions_reservation
+        id_fraction
+        id_reservation_originale
+        nombre_passagers_fraction
+        ordre_fraction
+        id_assignation
+    -assignations
+        taux_remplissage
+        passagers_totaux

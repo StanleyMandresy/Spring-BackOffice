@@ -1,0 +1,44 @@
+TL: ETU003118
+Dev:ETU003209
+    ETU003111
+
+BackOffice
+    -feature/gestionRetourVehicule: ETU003209
+    -feature/departImmediatMaxPassagers: ETU003111
+    -feature/gestionAttenteSiPlacesDisponibles: ETU003209
+    -feature/regroupementDynamique: ETU003111
+    -feature/prioriteReservationsNonAssignees: ETU003209
+    -feature/optimisationEnTempsReel: ETU003111
+FrontOffice
+    -feature/tableauBordTempsReel: ETU003209
+    -feature/alertesRegroupementDynamique: ETU003111
+    -feature/statistiquesOptimisation: ETU003209
+
+Sprint 8 - Gestion dynamique des véhicules
+Objectif: Optimisation en temps réel des assignations lors des retours
+
+Règles métier:
+    - Retour de véhicule: départ immédiat avec maximum de passagers
+    - Si places > passagers: décision attente regroupement ou départ immédiat
+    - Nouveau regroupement: réservations non assignées traitées en priorité
+    - Système dynamique et réactif
+
+Table modifications
+    -vehicules
+        heure_dernier_retour
+        en_attente_regroupement (boolean)
+    -evenements_vehicule
+        id_evenement
+        id_vehicule
+        type_evenement (DEPART, RETOUR, ATTENTE, REASSIGNATION)
+        horodatage
+        details
+    -regroupements
+        type_regroupement (PLANIFIE, DYNAMIQUE)
+        id_vehicule_disponible
+    -decisions_systeme
+        id_decision
+        timestamp
+        contexte
+        decision_prise
+        resultat

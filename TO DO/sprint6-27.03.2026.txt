@@ -1,0 +1,37 @@
+TL: ETU003118
+Dev:ETU003209
+    ETU003111
+
+BackOffice
+    -feature/suiviNombreTrajets: ETU003209
+    -feature/calculDisponibiliteVehicule: ETU003111
+    -feature/prioriteCapaciteAdaptee: ETU003209
+    -feature/prioriteTypeCarburant: ETU003111
+    -feature/reassignationVehiculesDisponibles: ETU003209
+    -feature/gestionStatutVehicule: ETU003111
+FrontOffice
+    -feature/suivisTrajetsEnTempsReel: ETU003209
+    -feature/historiqueTrajetVehicule: ETU003111
+
+Sprint 6 - Gestion des trajets
+Objectif: Gérer la disponibilité et le suivi des trajets de véhicules
+
+Règles métier:
+    - Véhicule disponible = non en trajet à l'heure donnée
+    - Priorité: capacité adaptée > moins de trajets > type carburant
+    - Véhicules libérés prennent réservations non assignées
+
+Table modifications
+    -vehicules
+        nombre_trajets
+        statut (DISPONIBLE, EN_TRAJET, MAINTENANCE)
+    -trajets
+        id_trajet
+        id_vehicule
+        heure_depart
+        heure_retour_estimee
+        heure_retour_reelle
+        statut
+    -assignations
+        id_trajet
+        heure_assignation
