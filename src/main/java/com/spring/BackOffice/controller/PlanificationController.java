@@ -172,11 +172,11 @@ public class PlanificationController {
      * Afficher les événements véhicules
      */
     @GetMapping("/planification/evenements")
-    public ModelView voirEvenements(@RequestParam(value = "heures", required = false) String heuresStr) {
+    public ModelView voirEvenements(@RequestParam("heures") String heuresStr) {
         ModelView mv = new ModelView();
 
         try {
-            int heures = heuresStr != null ? Integer.parseInt(heuresStr) : 24;
+            int heures = (heuresStr != null && !heuresStr.isEmpty()) ? Integer.parseInt(heuresStr) : 24;
             List<EvenementVehicule> evenements = EvenementVehicule.findRecents(jdbcTemplate, heures);
 
             mv.addItem("evenements", evenements);
@@ -198,11 +198,11 @@ public class PlanificationController {
      * Afficher les décisions système
      */
     @GetMapping("/planification/decisions")
-    public ModelView voirDecisions(@RequestParam(value = "limit", required = false) String limitStr) {
+    public ModelView voirDecisions(@RequestParam("limit") String limitStr) {
         ModelView mv = new ModelView();
 
         try {
-            int limit = limitStr != null ? Integer.parseInt(limitStr) : 50;
+            int limit = (limitStr != null && !limitStr.isEmpty()) ? Integer.parseInt(limitStr) : 50;
             List<DecisionSysteme> decisions = DecisionSysteme.findRecent(jdbcTemplate, limit);
 
             mv.addItem("decisions", decisions);
