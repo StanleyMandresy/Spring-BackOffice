@@ -205,6 +205,9 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         restantMap.put(r.getIdReservation(), r.getNombrePassagers());
     }
 
+    // 🔥 NOUVEAU : tracker l'heure du dernier retour PAR CLIENT
+    Map<Long, LocalDateTime> dernierRetourParClient = new HashMap<>();
+
     // Tri décroissant (gros groupes d'abord)
     reservations.sort((a, b) ->
             Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
@@ -212,36 +215,45 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
     Set<Long> traitees = new HashSet<>();
 
-    for (Reservation principale : reservations) {
+    // 🔥 NOUVELLE LOGIQUE : boucle globale sur TOUS les trajets, pas réservation par réservation
+    boolean encore = true;
+    while (encore) {
+        encore = false;
 
-        int restant = restantMap.get(principale.getIdReservation());
-        if (restant <= 0) continue;
+        for (Reservation principale : reservations) {
 
-        List<Vehicule> vehiculesDispo = new ArrayList<>();
+            int restant = restantMap.get(principale.getIdReservation());
+            if (restant <= 0) continue;
 
-        for (Vehicule v : vehicules) {
-            FenetreDisponibilite fenetreDispo = fenetresDisponibilite.get(v.getId());
-            if (fenetreDispo == null) continue;
+            encore = true; // Il reste au moins une réservation avec des passagers
 
-            LocalDateTime dispo = dispoVehicule.get(v.getId());
+            List<Vehicule> vehiculesDispo = new ArrayList<>();
 
-            if (dispo.isAfter(fenetreDispo.getFin())) continue;
+            for (Vehicule v : vehicules) {
+                FenetreDisponibilite fenetreDispo = fenetresDisponibilite.get(v.getId());
+                if (fenetreDispo == null) continue;
 
-            vehiculesDispo.add(v);
-        }
+                LocalDateTime dispo = dispoVehicule.get(v.getId());
 
-        vehiculesDispo.sort((v1, v2) -> {
-            int t1 = nbTrajetsVehicule.get(v1.getId());
-            int t2 = nbTrajetsVehicule.get(v2.getId());
+                if (dispo.isAfter(fenetreDispo.getFin())) continue;
 
-            if (t1 != t2) return Integer.compare(t1, t2);
+                vehiculesDispo.add(v);
+            }
 
-            return Integer.compare(v2.getNbrPlace(), v1.getNbrPlace());
-        });
+            if (vehiculesDispo.isEmpty()) continue; // Pas de véhicule dispo, passer à la réservation suivante
 
-        Hotel positionDepart = aeroport;
+            vehiculesDispo.sort((v1, v2) -> {
+                int t1 = nbTrajetsVehicule.get(v1.getId());
+                int t2 = nbTrajetsVehicule.get(v2.getId());
 
-        while (restant > 0 && !vehiculesDispo.isEmpty()) {
+                if (t1 != t2) return Integer.compare(t1, t2);
+
+                return Integer.compare(v2.getNbrPlace(), v1.getNbrPlace());
+            });
+
+            Hotel positionDepart = aeroport;
+
+            // 🔥 CHANGEMENT : on alloue UN SEUL véhicule par tour, pas while
 
             Vehicule vehiculeChoisi = null;
 
@@ -265,16 +277,50 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             LocalDateTime dispo = dispoVehicule.get(vehiculeChoisi.getId());
             LocalDateTime arriveeClient = principale.getDateHeureArrive().toLocalDateTime();
 
-            LocalDateTime heureDepart = dispo.isAfter(arriveeClient) ? dispo : arriveeClient;
+            // 🔥 CORRECTION CRITIQUE : pour les trajets successifs, attendre le dernier retour
+            LocalDateTime referenceTemps = dernierRetourParClient.getOrDefault(
+                    principale.getIdReservation(),
+                    arriveeClient
+            );
+            LocalDateTime heureDepart = dispo.isAfter(referenceTemps) ? dispo : referenceTemps;
 
             int pris = Math.min(restant, vehiculeChoisi.getNbrPlace());
 
-            // allocation principale
-            allocateToVehicule(
-                    principale, vehiculeChoisi, pris,
-                    date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
-                    dispoVehicule, nbTrajetsVehicule
+            // Calculer le retour
+            Distance distAller = Distance.findByHotels(
+                    jdbcTemplate,
+                    positionDepart.getIdHotel(),
+                    principale.getIdHotel()
             );
+            long dureeAller = Math.round((distAller.getDistanceKm().doubleValue() / vitesse) * 60);
+            LocalDateTime heureArrivee = heureDepart.plusMinutes(dureeAller);
+
+            Distance distRetour = Distance.findByHotels(
+                    jdbcTemplate,
+                    principale.getIdHotel(),
+                    aeroport.getIdHotel()
+            );
+            long dureeRetour = Math.round((distRetour.getDistanceKm().doubleValue() / vitesse) * 60);
+            LocalDateTime heureRetour = heureArrivee.plusMinutes(dureeRetour);
+
+            // Créer et sauvegarder le planning
+            PlanningTransport pt = new PlanningTransport(
+                    principale,
+                    vehiculeChoisi,
+                    date,
+                    heureDepart,
+                    heureArrivee,
+                    heureRetour
+            );
+            pt.setNombrePassagersTransportes(pris);
+            pt.save(jdbcTemplate);
+
+            // update véhicule
+            dispoVehicule.put(vehiculeChoisi.getId(), heureRetour);
+            nbTrajetsVehicule.put(vehiculeChoisi.getId(), nbTrajetsVehicule.get(vehiculeChoisi.getId()) + 1);
+
+            // 🔥 NOUVEAU : sauvegarder le retour pour ce client
+            dernierRetourParClient.put(principale.getIdReservation(), heureRetour);
 
             restant -= pris;
             restantMap.put(principale.getIdReservation(), restant);
@@ -296,10 +342,14 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
                     LocalDateTime heureAutre = autre.getDateHeureArrive().toLocalDateTime();
 
-                    long diff = Math.abs(Duration.between(arriveeClient, heureAutre).toMinutes());
+                    // 🔥 CORRECTION : comparer avec heureDepart (départ effectif), pas arriveeClient
+                    long diff = Math.abs(Duration.between(heureDepart, heureAutre).toMinutes());
 
                     // 🔥 respect fenêtre
                     if (diff > attenteMax) continue;
+
+                    // 🔥 ACCEPTER même si hôtels différents (tournée multi-stops)
+                    // Note : le calcul de tournée devra être implémenté plus tard
 
                     candidats.add(autre);
                 }
@@ -324,11 +374,17 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
                     int aPrendre = Math.min(placesLibres, restantAutre);
 
-                    allocateToVehicule(
-                            autre, vehiculeChoisi, aPrendre,
-                            date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
-                            dispoVehicule, nbTrajetsVehicule
+                    // 🔥 Covoiturage : même trajet = mêmes heures (déjà calculées pour le client principal)
+                    PlanningTransport ptCovoiturage = new PlanningTransport(
+                            autre,
+                            vehiculeChoisi,
+                            date,
+                            heureDepart,
+                            heureArrivee,
+                            heureRetour
                     );
+                    ptCovoiturage.setNombrePassagersTransportes(aPrendre);
+                    ptCovoiturage.save(jdbcTemplate);
 
                     restantAutre -= aPrendre;
                     restantMap.put(autre.getIdReservation(), restantAutre);
@@ -346,20 +402,20 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                 }
             }
 
-            vehiculesDispo.remove(vehiculeChoisi);
+            // 🔥 Mise à jour du statut après chaque trajet
+            restant = restantMap.get(principale.getIdReservation());
+            if (restant == 0) {
+                Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
+                traitees.add(principale.getIdReservation());
+            } else {
+                Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "partiel");
+            }
         }
-
-        if (restant == 0) {
-            Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
-        } else {
-            Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "partiel");
-        }
-
-        traitees.add(principale.getIdReservation());
     }
 
+    // Annuler les réservations qui n'ont pas pu être traitées
     for (Reservation r : reservations) {
-        if (restantMap.get(r.getIdReservation()) > 0) {
+        if (restantMap.get(r.getIdReservation()) > 0 && !traitees.contains(r.getIdReservation())) {
             Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
         }
     }
