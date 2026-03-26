@@ -32,6 +32,19 @@ CREATE TABLE vehicule (
     type_carburant CHAR(2) NOT NULL CHECK (type_carburant IN ('D', 'ES', 'S', 'E'))
 );
 
+CREATE TABLE voiture_disponible (
+    id SERIAL PRIMARY KEY,
+    id_vehicule INTEGER NOT NULL,
+    date_heure_disponible_debut TIMESTAMP NOT NULL,
+    date_heure_disponible_fin TIMESTAMP NOT NULL,
+    CONSTRAINT fk_voiture_disponible_vehicule
+        FOREIGN KEY (id_vehicule)
+        REFERENCES vehicule(id)
+        ON DELETE CASCADE,
+    CONSTRAINT ck_voiture_disponible_dates
+        CHECK (date_heure_disponible_fin > date_heure_disponible_debut)
+);
+
 CREATE TABLE token (
     id SERIAL PRIMARY KEY,
     token VARCHAR(100) NOT NULL UNIQUE,
@@ -81,3 +94,7 @@ CREATE TABLE planning_transport (
     heure_arrive TIMESTAMP NOT NULL,
     heure_retour TIMESTAMP NULL
 );
+
+------------------ sprint 7 --------------------------
+ALTER TABLE planning_transport
+ADD nombre_passagers_transportes INT;

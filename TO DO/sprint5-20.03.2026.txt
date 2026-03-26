@@ -1,0 +1,34 @@
+TL: ETU003118
+Dev:ETU003209
+    ETU003111
+
+BackOffice
+    -feature/parametreTempsAttente: ETU003111
+    -feature/regroupementParTempsAttente: ETU003209
+    -feature/calculDepartDernierVol: ETU003111
+    -feature/prioriteGroupesPassagers: ETU003209
+    -fix/optimisationRegroupement: ETU003111
+FrontOffice
+    -feature/affichageRegroupementsTemporaires: ETU003209
+    -feature/statutRegroupement: ETU003111
+
+Sprint 5 - Gestion du temps d'attente
+Objectif: Implémenter le regroupement des réservations selon temps d'attente
+
+Règles métier:
+    - Regroupement si écart <= temps d'attente paramétré (ex: 30 min)
+    - Heure de départ = heure du dernier vol du groupe
+    - Priorité aux groupes avec plus de passagers totaux
+
+Table modifications
+    -parametres
+        id_parametre
+        nom
+        valeur
+        type
+        description
+    -regroupements
+        id_regroupement
+        heure_depart
+        nombre_total_passagers
+        statut

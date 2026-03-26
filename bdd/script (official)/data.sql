@@ -1,7 +1,7 @@
 ------------------------sprint 1------------------------
 INSERT INTO hotel (id_hotel, nom_hotel, ville) VALUES
 (1,'AEROPORT', NULL),
-(2, 'Colbert', NULL),
+(2, 'Hotel 1', NULL),
 (3, 'Novotel', NULL),
 (4, 'Ibis', NULL),
 (5, 'Lokanga', NULL);
@@ -16,32 +16,25 @@ INSERT INTO reservation (
     statut,
     commentaire
 ) VALUES
-(1, '4631', 3, 11, '2026-02-05 00:01:00', 'en_attente', NULL),
-(2, '4394', 3, 1, '2026-02-05 23:55:00', 'en_attente', NULL),
-(3, '8054', 1, 2, '2026-02-09 10:17:00', 'en_attente', NULL),
-(4, '1432', 2, 4, '2026-02-01 15:25:00', 'en_attente', NULL),
-(5, '7861', 1, 4, '2026-01-28 07:11:00', 'en_attente', NULL),
-(6, '3308', 1, 5, '2026-01-28 07:45:00', 'en_attente', NULL),
-(7, '4484', 2, 13, '2026-02-28 08:25:00', 'en_attente', NULL),
-(8, '9687', 2, 8, '2026-02-28 13:00:00', 'en_attente', NULL),
-(9, '6302', 1, 7, '2026-02-15 13:00:00', 'en_attente', NULL),
-(10, '8640', 4, 1, '2026-02-18 22:55:00', 'en_attente', NULL);
-
+(11, 'C001', 2, 7,  '2026-03-12 09:00:00', 'en_attente', NULL),
+(12, 'C002', 2, 11, '2026-03-12 09:00:00', 'en_attente', NULL),
+(13, 'C003', 2, 3,  '2026-03-12 09:00:00', 'en_attente', NULL),
+(14, 'C004', 2, 1,  '2026-03-12 09:00:00', 'en_attente', NULL),
+(15, 'C005', 2, 2,  '2026-03-12 09:00:00', 'en_attente', NULL),
+(16, 'C006', 2, 20, '2026-03-12 09:00:00', 'en_attente', NULL);
 ------------------------sprint 2------------------------
-
-INSERT INTO vehicule (reference, nbrPlace, type_carburant)
-VALUES
-('8382 TBA', 7, 'D'),
-('2498 TAA', 5, 'ES');
+INSERT INTO vehicule (reference, nbrPlace, type_carburant) VALUES
+('VEH-001', 6, 'D'),
+('VEH-002', 5, 'ES');
 
 -------------------------sprint 3------------------------
 
 INSERT INTO parametre (vitesse_kmh, temps_attente_minute) VALUES
-(40.00, 10);
+(50.00, 10);
 
 
 INSERT INTO distance (from_depart, to_arrive, distance_km) VALUES
-(1, 2, 3.50),
+(1, 2, 50),
 (2, 3, 5.00),
 (3, 4, 6.50),
 (4, 5, 10.80);

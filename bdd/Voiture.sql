@@ -22,7 +22,7 @@ CREATE TABLE lieu (
     actif BOOLEAN DEFAULT TRUE
 );
 
-Hôtels (destinations)
+-- Hôtels (destinations)
 CREATE TABLE hotel (
     id_hotel SERIAL PRIMARY KEY,
     nom_hotel VARCHAR(100) NOT NULL,
@@ -57,10 +57,10 @@ CREATE TABLE client (
     contact VARCHAR(50),
     email VARCHAR(100),
     id_categorie INTEGER REFERENCES categorie_client(id_categorie),
-    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_creation DATE,
     actif BOOLEAN DEFAULT TRUE
 );
-
+    
 -- Chauffeurs
 CREATE TABLE chauffeur (
     id_chauffeur SERIAL PRIMARY KEY,
@@ -266,4 +266,68 @@ CREATE INDEX idx_reservation_hotel ON reservation(id_hotel);
 -- JOIN chauffeur ch ON g.id_chauffeur = ch.id_chauffeur
 -- JOIN hotel h ON g.id_hotel_destination = h.id_hotel
 -- ORDER BY g.date_heure_depart, g.ordre_depart;
-khjbjhkfhgjkl
+
+
+-- 🔹 Réservations pour le test du 2026-03-06
+INSERT INTO reservation (id_reservation, id_client, id_hotel, date_heure_arrive, nombre_passagers, statut)
+VALUES
+-- petit groupe tôt
+(20, 2001, 2, '2026-03-06 08:00:00', 2, 'en_attente'),
+-- groupe moyen
+(21, 2002, 3, '2026-03-06 08:10:00', 4, 'en_attente'),
+-- gros groupe
+(22, 2003, 4, '2026-03-06 08:20:00', 5, 'en_attente'),
+-- chevauchement avec le premier
+(23, 2004, 5, '2026-03-06 08:05:00', 3, 'en_attente'),
+
+-- réservation tardive
+(24, 2005, 2, '2026-03-06 10:00:00', 4, 'en_attente'),
+-- gros groupe tard
+(25, 2006, 3, '2026-03-06 10:15:00', 8, 'en_attente'),
+-- petit groupe fin de matinée
+(26, 2007, 4, '2026-03-06 11:00:00', 1, 'en_attente'),
+-- test capacité exacte
+(27, 2008, 5, '2026-03-06 11:30:00', 5, 'en_attente');
+
+
+données vehicule:
+vehicule 1, 12 place, diesel
+vehicule 2, 5,essence*
+vehicule 3,5, diesel
+vehicule 4,12, essence
+
+, 
+date 12/03/2026
+client1,7passager,09:00:00,hotel 1
+2,11,meme heure,hotel 1
+3,3,meme heure,hotel 1
+4,1,meme heure, hotel 1
+5,2,meme heure,hotel 1
+6,20,meme heure,hotel 1
+
+hotel aeroport 50 vitesse_kmh
+
+vitesse moyenne 50
+
+-- 🔄 Reset des données
+TRUNCATE TABLE reservation CASCADE;
+
+-- 📥 Insertion des réservations
+INSERT INTO reservation (
+    id_reservation,
+    id_client,
+    id_hotel,
+    nombre_passagers,
+    date_heure_arrive,
+    statut,
+    commentaire
+) VALUES
+
+-- 🔥 Fenêtre principale (test SPLIT)
+(21, 'T001', 2, 7,  '2026-03-17 08:00:00', 'en_attente', NULL),
+(22, 'T002', 2, 11, '2026-03-17 08:05:00', 'en_attente', NULL),
+(23, 'T003', 2, 3,  '2026-03-17 08:10:00', 'en_attente', NULL),
+(24, 'T004', 2, 15, '2026-03-17 08:12:00', 'en_attente', NULL),
+
+-- 🧪 Petit groupe après (test retour véhicule)
+(25, 'T005', 2, 4,  '2026-03-17 09:00:00', 'en_attente', NULL);

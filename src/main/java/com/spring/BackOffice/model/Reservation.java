@@ -146,8 +146,70 @@ public class Reservation {
                      "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = 'annule'";
         return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
     }
-    
-    
+
+    public static boolean estAnnule(JdbcTemplate jdbcTemplate, Long idReservation) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE r.id_reservation = ? AND r.statut = 'annule'";
+        List<Reservation> list = jdbcTemplate.query(sql, new Object[]{idReservation}, new ReservationRowMapper());
+        return list.isEmpty() ? false : true;
+    }
+
+     public static List<Reservation> findByStatutList(JdbcTemplate jdbcTemplate, String statut) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE r.statut = ? ORDER BY r.date_creation DESC";
+        return jdbcTemplate.query(sql, new Object[]{statut}, new ReservationRowMapper());
+    }
+
+     public static List<Reservation> findByDateAndStatutList(JdbcTemplate jdbcTemplate, LocalDate date, String statut) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE DATE(r.date_heure_arrive) = ? AND r.statut = ? ORDER BY r.date_creation DESC";
+        return jdbcTemplate.query(sql, new Object[]{date, statut}, new ReservationRowMapper());
+    }
+
+    /**
+     * SPRINT 8 : Récupérer les réservations non assignées avec priorité
+     * Priorité : 1) Partielles d'abord (déjà commencées), 2) Plus anciennes (FIFO)
+     */
+    public static List<Reservation> findNonAssigneesAvecPriorite(JdbcTemplate jdbcTemplate, LocalDate date) {
+        String sql = "SELECT r.*, h.nom_hotel " +
+                     "FROM reservation r " +
+                     "LEFT JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "WHERE DATE(r.date_heure_arrive) = ? " +
+                     "AND r.statut IN ('en_attente', 'partiel') " +
+                     "ORDER BY " +
+                     "  CASE WHEN r.statut = 'partiel' THEN 0 ELSE 1 END, " +  // Partielles en premier
+                     "  r.date_creation ASC";  // Puis par ordre chronologique (FIFO)
+        return jdbcTemplate.query(sql, new Object[]{date}, new ReservationRowMapper());
+    }
+
+    /**
+     * SPRINT 8 : Calculer le nombre de passagers restants pour une réservation
+     * (nombre total - nombre déjà transporté)
+     */
+    public static int getPassagersRestants(JdbcTemplate jdbcTemplate, Long idReservation) {
+        String sql = "SELECT r.nombre_passagers - COALESCE(SUM(pt.nombre_passagers_transportes), 0) AS restants " +
+                     "FROM reservation r " +
+                     "LEFT JOIN planning_transport pt ON r.id_reservation = pt.id_reservation " +
+                     "WHERE r.id_reservation = ? " +
+                     "GROUP BY r.nombre_passagers";
+
+        try {
+            Integer restants = jdbcTemplate.queryForObject(sql, Integer.class, idReservation);
+            return restants != null ? restants : 0;
+        } catch (Exception e) {
+            // Si la réservation n'existe pas ou aucun transport, retourner 0
+            System.err.println("⚠️ Erreur calcul passagers restants pour réservation #" + idReservation + ": " + e.getMessage());
+            return 0;
+        }
+    }
+
+
 
     // -------------------
     // RowMapper

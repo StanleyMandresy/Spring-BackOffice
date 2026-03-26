@@ -1,0 +1,33 @@
+TL: ETU003118
+Dev:ETU003209
+    ETU003111
+
+BackOffice
+    -feature/regroupementReservationsMemeVol: ETU003209
+    -feature/calculProximiteDestinations: ETU003111
+    -feature/prioriteGroupesPlusGrands: ETU003209
+    -feature/apiListeReservationsAvecHeureAeroport: ETU003111
+    -feature/optimisationAlgorithmeAssignation: ETU003209
+FrontOffice
+    -feature/affichageHeuresArriveesAeroport: ETU003111
+    -feature/visualisationRegroupements: ETU003209
+
+Sprint 4 - Optimisation des assignations
+Objectif: Optimiser l'assignation des véhicules selon critères avancés
+
+Règles métier:
+    - Même vol → même véhicule
+    - Livraison selon proximité des destinations
+    - Priorité aux groupes avec plus de passagers
+    - Considération du nombre de clients/hôtels
+
+Table modifications
+    -reservations
+        id_vol (nullable)
+        ordre_priorite
+    -assignations
+        id_assignation
+        id_reservation
+        id_vehicule
+        heure_arrivee_aeroport
+        ordre_livraison
