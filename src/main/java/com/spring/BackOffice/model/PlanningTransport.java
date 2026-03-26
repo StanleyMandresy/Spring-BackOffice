@@ -199,13 +199,13 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         nbTrajetsVehicule.put(v.getId(), 0);
     }
 
-    // 🔥 NOUVEAU : suivi des passagers restants
+    // 🔥 Suivi des passagers restants
     Map<Long, Integer> restantMap = new HashMap<>();
     for (Reservation r : reservations) {
         restantMap.put(r.getIdReservation(), r.getNombrePassagers());
     }
 
-    // Tri décroissant (gros groupes d'abord)
+    // Tri gros groupes d'abord
     reservations.sort((a, b) ->
             Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
     );
@@ -224,7 +224,6 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             if (fenetreDispo == null) continue;
 
             LocalDateTime dispo = dispoVehicule.get(v.getId());
-
             if (dispo.isAfter(fenetreDispo.getFin())) continue;
 
             vehiculesDispo.add(v);
@@ -265,11 +264,42 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
             LocalDateTime dispo = dispoVehicule.get(vehiculeChoisi.getId());
             LocalDateTime arriveeClient = principale.getDateHeureArrive().toLocalDateTime();
 
-            LocalDateTime heureDepart = dispo.isAfter(arriveeClient) ? dispo : arriveeClient;
+            LocalDateTime heureBase = dispo.isAfter(arriveeClient) ? dispo : arriveeClient;
+
+            // 🔥 ATTENTE INTELLIGENTE
+            LocalDateTime meilleureHeure = heureBase;
+            int meilleurRemplissage = Math.min(restant, vehiculeChoisi.getNbrPlace());
+
+            for (Reservation autre : reservations) {
+
+                if (autre.getIdReservation() == principale.getIdReservation())
+                    continue;
+
+                int restantAutre = restantMap.get(autre.getIdReservation());
+                if (restantAutre <= 0) continue;
+
+                LocalDateTime heureAutre = autre.getDateHeureArrive().toLocalDateTime();
+
+                long diff = Duration.between(heureBase, heureAutre).toMinutes();
+
+                if (diff > 0 && diff <= attenteMax) {
+
+                    int potentiel = Math.min(
+                            vehiculeChoisi.getNbrPlace(),
+                            restant + restantAutre
+                    );
+
+                    if (potentiel > meilleurRemplissage) {
+                        meilleurRemplissage = potentiel;
+                        meilleureHeure = heureAutre;
+                    }
+                }
+            }
+
+            LocalDateTime heureDepart = meilleureHeure;
 
             int pris = Math.min(restant, vehiculeChoisi.getNbrPlace());
 
-            // allocation principale
             allocateToVehicule(
                     principale, vehiculeChoisi, pris,
                     date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
@@ -281,7 +311,7 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
             int placesLibres = vehiculeChoisi.getNbrPlace() - pris;
 
-            // 🔥 REMPLISSAGE INTELLIGENT
+            // 🔥 REMPLISSAGE
             if (placesLibres > 0) {
 
                 List<Reservation> candidats = new ArrayList<>();
@@ -296,15 +326,13 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
 
                     LocalDateTime heureAutre = autre.getDateHeureArrive().toLocalDateTime();
 
-                    long diff = Math.abs(Duration.between(arriveeClient, heureAutre).toMinutes());
+                    long diff = Math.abs(Duration.between(heureDepart, heureAutre).toMinutes());
 
-                    // 🔥 respect fenêtre
                     if (diff > attenteMax) continue;
 
                     candidats.add(autre);
                 }
 
-                // 🔥 best-fit remplissage
                 final int placesRef = placesLibres;
 
                 candidats.sort((a, b) -> {
@@ -312,11 +340,11 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                     int rB = restantMap.get(b.getIdReservation());
 
                     return Integer.compare(
-                        Math.abs(placesRef - rA),
-                        Math.abs(placesRef - rB)
+                            Math.abs(placesRef - rA),
+                            Math.abs(placesRef - rB)
                     );
                 });
-                
+
                 for (Reservation autre : candidats) {
 
                     int restantAutre = restantMap.get(autre.getIdReservation());
