@@ -11,7 +11,8 @@ import java.util.*;
 
 public class PlanningTransport {
 
-    private static class FenetreDisponibilite {
+    // SPRINT 8: Rendu public pour réutilisation par PlanificationDynamique
+    public static class FenetreDisponibilite {
         private final LocalDateTime debut;
         private final LocalDateTime fin;
 
@@ -37,6 +38,7 @@ public class PlanningTransport {
     private LocalDateTime heureArrive;
     private LocalDateTime heureRetour;
     private int nombrePassagersTransportes;
+    private String typeRegroupement = "PLANIFIE";  // SPRINT 8: PLANIFIE ou DYNAMIQUE
 
     public PlanningTransport(
             Reservation reservation,
@@ -115,6 +117,15 @@ public class PlanningTransport {
         this.nombrePassagersTransportes = nombrePassagersTransportes;
     }
 
+    // SPRINT 8: Getter/Setter pour type de regroupement
+    public String getTypeRegroupement() {
+        return typeRegroupement;
+    }
+
+    public void setTypeRegroupement(String typeRegroupement) {
+        this.typeRegroupement = typeRegroupement;
+    }
+
     // ==========================
     // UTILE : véhicule libre ?
     // ==========================
@@ -122,7 +133,8 @@ public class PlanningTransport {
         return heureRetour != null;
     }
 
-    private static Map<Long, FenetreDisponibilite> chargerDisponibilitesVehicules(JdbcTemplate jdbcTemplate, LocalDate date) {
+    // SPRINT 8: Rendu public pour réutilisation par PlanificationDynamique
+    public static Map<Long, FenetreDisponibilite> chargerDisponibilitesVehicules(JdbcTemplate jdbcTemplate, LocalDate date) {
         String sql = "SELECT id_vehicule, date_heure_disponible_debut, date_heure_disponible_fin " +
                      "FROM voiture_disponible " +
                      "WHERE date_heure_disponible_debut::date <= ? AND date_heure_disponible_fin::date >= ?";
@@ -158,8 +170,8 @@ public class PlanningTransport {
     public void save(JdbcTemplate jdbcTemplate) {
         String sql = "INSERT INTO planning_transport\n" +
                 "            (id_reservation, id_vehicule, date_transport,\n" +
-                "             heure_depart, heure_arrive, heure_retour, nombre_passagers_transportes)\n" +
-                "            VALUES (?, ?, ?, ?, ?, ?,?)\n";
+                "             heure_depart, heure_arrive, heure_retour, nombre_passagers_transportes, type_regroupement)\n" +
+                "            VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n";
 
         jdbcTemplate.update(
                 sql,
@@ -169,7 +181,8 @@ public class PlanningTransport {
                 heureDepart,
                 heureArrive,
                 heureRetour,
-                nombrePassagersTransportes
+                nombrePassagersTransportes,
+                typeRegroupement
         );
     }
 
@@ -393,7 +406,8 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
     }
 }
     // HELPER METHOD: Alloue une réservation à un véhicule avec calcul de trajets
-    private static void allocateToVehicule(
+    // SPRINT 8: Rendu public pour réutilisation par PlanificationDynamique
+    public static void allocateToVehicule(
             Reservation principale,
             Vehicule vehicule,
             int nombrePassagers,
@@ -455,6 +469,23 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
         return jdbcTemplate.query(sql, new Object[]{date}, new PlanningTransportRowMapper());
     }
 
+    /**
+     * SPRINT 8: Trouve les trajets terminés pour une date donnée
+     * (véhicules qui devraient être revenus avant l'heure actuelle)
+     */
+    public static List<PlanningTransport> findTrajetsTerminesPourDate(
+            JdbcTemplate jdbcTemplate, LocalDate date, LocalDateTime maintenant) {
+        String sql = "SELECT pt.*, r.id_client, r.id_hotel, h.nom_hotel, r.nombre_passagers, r.commentaire, r.date_heure_arrive, v.reference " +
+                     "FROM planning_transport pt " +
+                     "JOIN reservation r ON pt.id_reservation = r.id_reservation " +
+                     "JOIN hotel h ON r.id_hotel = h.id_hotel " +
+                     "JOIN vehicule v ON pt.id_vehicule = v.id " +
+                     "WHERE pt.date_transport = ? " +
+                     "AND pt.heure_retour <= ? " +
+                     "ORDER BY pt.heure_retour";
+        return jdbcTemplate.query(sql, new Object[]{date, maintenant}, new PlanningTransportRowMapper());
+    }
+
     public static boolean reservationDejaPlanifiee(JdbcTemplate jdbcTemplate, Long idReservation) {
         String sql = "SELECT COUNT(*) FROM planning_transport WHERE id_reservation = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, idReservation);
@@ -490,6 +521,22 @@ public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date
                             : null
             );
             pt.setId(rs.getLong("id"));
+
+            // SPRINT 8: Lecture des nouveaux champs
+            try {
+                pt.setNombrePassagersTransportes(rs.getInt("nombre_passagers_transportes"));
+            } catch (SQLException ignored) {
+                // Colonne peut ne pas exister dans anciennes données
+            }
+
+            try {
+                String typeReg = rs.getString("type_regroupement");
+                if (typeReg != null) {
+                    pt.setTypeRegroupement(typeReg);
+                }
+            } catch (SQLException ignored) {
+                // Colonne peut ne pas exister dans anciennes données
+            }
 
             return pt;
         }
