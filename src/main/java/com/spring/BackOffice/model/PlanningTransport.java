@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -172,210 +173,197 @@ public class PlanningTransport {
         );
     }
 
-    public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
-        List<Reservation> reservations = Reservation.findByDate(jdbcTemplate, date);
-        List<Vehicule> vehicules = Vehicule.findAll(jdbcTemplate);
+public static void planifierTransports(JdbcTemplate jdbcTemplate, LocalDate date) {
 
-        Parametre param = Parametre.getLatest(jdbcTemplate);
-        double vitesse = param.getVitesseKmh().doubleValue();
-        int attenteMax = param.getTempsAttenteMinute();
+    List<Reservation> reservations = Reservation.findByDate(jdbcTemplate, date);
+    List<Vehicule> vehicules = Vehicule.findAll(jdbcTemplate);
 
-        Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
+    Parametre param = Parametre.getLatest(jdbcTemplate);
+    double vitesse = param.getVitesseKmh().doubleValue();
+    int attenteMax = param.getTempsAttenteMinute();
 
-        Map<Long, FenetreDisponibilite> fenetresDisponibilite = chargerDisponibilitesVehicules(jdbcTemplate, date);
+    Hotel aeroport = Hotel.findByNom(jdbcTemplate, "AEROPORT");
 
-        // disponibilité véhicules
-        Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
-        for (Vehicule v : vehicules) {
-            FenetreDisponibilite fenetre = fenetresDisponibilite.get(v.getId());
-            if (fenetre != null) {
-                dispoVehicule.put(v.getId(), fenetre.getDebut());
-            }
-        }
+    Map<Long, FenetreDisponibilite> fenetresDisponibilite = chargerDisponibilitesVehicules(jdbcTemplate, date);
 
-        // nombre de trajets par véhicule
-        Map<Long, Integer> nbTrajetsVehicule = new HashMap<>();
-        for (Vehicule v : vehicules) {
-            nbTrajetsVehicule.put(v.getId(), 0);
-        }
-
-        // TRI INITIAL: par nombre de passagers DÉCROISSANT (Decreasing First Fit)
-        reservations.sort((a, b) ->
-                Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
-        );
-
-        Set<Long> traitees = new HashSet<>();
-        int i = 0;
-
-        while (i < reservations.size()) {
-            Reservation base = reservations.get(i);
-            if (traitees.contains(base.getIdReservation())) {
-                i++;
-                continue;
-            }
-
-            // créer une fenêtre basée sur le temps d'arrivée du groupe principal
-            LocalDateTime debutFenetre = base.getDateHeureArrive().toLocalDateTime();
-            LocalDateTime finFenetre = debutFenetre.plusMinutes(attenteMax);
-
-            // construire la fenêtre
-            List<Reservation> fenetre = new ArrayList<>();
-            for (Reservation r : reservations) {
-                if (traitees.contains(r.getIdReservation())) continue;
-
-                LocalDateTime t = r.getDateHeureArrive().toLocalDateTime();
-                if (!t.isBefore(debutFenetre) && !t.isAfter(finFenetre)) {
-                    fenetre.add(r);
-                }
-            }
-
-            // TRI : par nombre de passagers DESC
-            fenetre.sort((a, b) ->
-                    Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
-            );
-
-            boolean splitDansFenetre = false;
-
-            // TRAITEMENT
-            for (Reservation principale : fenetre) {
-                if (traitees.contains(principale.getIdReservation())) continue;
-
-                int restant = principale.getNombrePassagers();
-
-                // véhicules disponibles (version sprint7_sprintfixed améliorée)
-                List<Vehicule> vehiculesDispo = new ArrayList<>();
-                for (Vehicule v : vehicules) {
-                    FenetreDisponibilite fenetreDispo = fenetresDisponibilite.get(v.getId());
-                    if (fenetreDispo == null) {
-                        continue;
-                    }
-
-                    LocalDateTime arriveePrincipale = principale.getDateHeureArrive().toLocalDateTime();
-                    if (arriveePrincipale.isBefore(fenetreDispo.getDebut()) || 
-                        arriveePrincipale.isAfter(fenetreDispo.getFin())) {
-                        continue;
-                    }
-
-                    if (!dispoVehicule.get(v.getId()).isAfter(arriveePrincipale)) {
-                        vehiculesDispo.add(v);
-                    }
-                }
-
-                // tri véhicules (priorité logique existante)
-                vehiculesDispo.sort((v1, v2) -> {
-                    int t1 = nbTrajetsVehicule.get(v1.getId());
-                    int t2 = nbTrajetsVehicule.get(v2.getId());
-
-                    if (t1 != t2) return Integer.compare(t1, t2);
-
-                    int capDiff = v2.getNbrPlace() - v1.getNbrPlace();
-                    if (capDiff != 0) return capDiff;
-
-                    boolean d1 = v1.getTypeCarburant().equals("D");
-                    boolean d2 = v2.getTypeCarburant().equals("D");
-
-                    return Boolean.compare(d2, d1);
-                });
-
-                if (vehiculesDispo.isEmpty()) continue;
-
-                LocalDateTime heureDepart = principale.getDateHeureArrive().toLocalDateTime();
-                Hotel positionDepart = aeroport;
-
-                int nbVehiculesUtilises = 0;
-
-                // AMÉLIORATION BIN PACKING: Chercher UNE voiture qui peut contenir TOUS les passagers
-                Vehicule vehiculeParfait = null;
-                int meilleureCapacite = Integer.MAX_VALUE;
-                
-                for (Vehicule v : vehiculesDispo) {
-                    if (v.getNbrPlace() >= principale.getNombrePassagers()) {
-                        if (v.getNbrPlace() < meilleureCapacite) {
-                            vehiculeParfait = v;
-                            meilleureCapacite = v.getNbrPlace();
-                        }
-                    }
-                }
-
-                if (vehiculeParfait != null) {
-                    // CAS IDÉAL: Toute la réservation dans une seule voiture
-                    allocateToVehicule(
-                        principale, vehiculeParfait, principale.getNombrePassagers(),
-                        date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
-                        dispoVehicule, nbTrajetsVehicule
-                    );
-                    restant = 0;
-                    nbVehiculesUtilises = 1;
-                } else {
-                    // FALLBACK: split intelligent
-                    List<Vehicule> vehiculesRestants = new ArrayList<>(vehiculesDispo);
-
-                    while (restant > 0 && !vehiculesRestants.isEmpty()) {
-                        Vehicule vehiculeChoisi = null;
-
-                        // 1) Priorité: un véhicule qui peut prendre tout le restant (best-fit)
-                        int meilleureCapaciteLocale = Integer.MAX_VALUE;
-                        for (Vehicule v : vehiculesRestants) {
-                            if (v.getNbrPlace() >= restant && v.getNbrPlace() < meilleureCapaciteLocale) {
-                                vehiculeChoisi = v;
-                                meilleureCapaciteLocale = v.getNbrPlace();
-                            }
-                        }
-
-                        // 2) Sinon: prendre le plus grand véhicule disponible
-                        if (vehiculeChoisi == null) {
-                            for (Vehicule v : vehiculesRestants) {
-                                if (vehiculeChoisi == null || v.getNbrPlace() > vehiculeChoisi.getNbrPlace()) {
-                                    vehiculeChoisi = v;
-                                }
-                            }
-                        }
-
-                        int pris = Math.min(restant, vehiculeChoisi.getNbrPlace());
-
-                        allocateToVehicule(
-                                principale, vehiculeChoisi, pris,
-                                date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
-                                dispoVehicule, nbTrajetsVehicule
-                        );
-
-                        restant -= pris;
-                        nbVehiculesUtilises++;
-                        vehiculesRestants.remove(vehiculeChoisi);
-                    }
-                }
-
-                // DETECTION SPLIT
-                if (nbVehiculesUtilises > 1) {
-                    splitDansFenetre = true;
-                }
-
-                // statut
-                if (restant == 0) {
-                    Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
-                } else {
-                    Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "partiel");
-                }
-
-                traitees.add(principale.getIdReservation());
-
-                // SI SPLIT → on stop la fenêtre
-                if (splitDansFenetre) {
-                    break;
-                }
-            }
-
-            i++;
-        }
-
-        // annuler non traitées
-        for (Reservation r : reservations) {
-            if (!traitees.contains(r.getIdReservation())) {
-                Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
-            }
+    Map<Long, LocalDateTime> dispoVehicule = new HashMap<>();
+    for (Vehicule v : vehicules) {
+        FenetreDisponibilite fenetre = fenetresDisponibilite.get(v.getId());
+        if (fenetre != null) {
+            dispoVehicule.put(v.getId(), fenetre.getDebut());
         }
     }
 
+    Map<Long, Integer> nbTrajetsVehicule = new HashMap<>();
+    for (Vehicule v : vehicules) {
+        nbTrajetsVehicule.put(v.getId(), 0);
+    }
+
+    // 🔥 NOUVEAU : suivi des passagers restants
+    Map<Long, Integer> restantMap = new HashMap<>();
+    for (Reservation r : reservations) {
+        restantMap.put(r.getIdReservation(), r.getNombrePassagers());
+    }
+
+    // Tri décroissant (gros groupes d'abord)
+    reservations.sort((a, b) ->
+            Integer.compare(b.getNombrePassagers(), a.getNombrePassagers())
+    );
+
+    Set<Long> traitees = new HashSet<>();
+
+    for (Reservation principale : reservations) {
+
+        int restant = restantMap.get(principale.getIdReservation());
+        if (restant <= 0) continue;
+
+        List<Vehicule> vehiculesDispo = new ArrayList<>();
+
+        for (Vehicule v : vehicules) {
+            FenetreDisponibilite fenetreDispo = fenetresDisponibilite.get(v.getId());
+            if (fenetreDispo == null) continue;
+
+            LocalDateTime dispo = dispoVehicule.get(v.getId());
+
+            if (dispo.isAfter(fenetreDispo.getFin())) continue;
+
+            vehiculesDispo.add(v);
+        }
+
+        vehiculesDispo.sort((v1, v2) -> {
+            int t1 = nbTrajetsVehicule.get(v1.getId());
+            int t2 = nbTrajetsVehicule.get(v2.getId());
+
+            if (t1 != t2) return Integer.compare(t1, t2);
+
+            return Integer.compare(v2.getNbrPlace(), v1.getNbrPlace());
+        });
+
+        Hotel positionDepart = aeroport;
+
+        while (restant > 0 && !vehiculesDispo.isEmpty()) {
+
+            Vehicule vehiculeChoisi = null;
+
+            // 🔥 BEST-FIT
+            int meilleureCapacite = Integer.MAX_VALUE;
+            for (Vehicule v : vehiculesDispo) {
+                if (v.getNbrPlace() >= restant && v.getNbrPlace() < meilleureCapacite) {
+                    vehiculeChoisi = v;
+                    meilleureCapacite = v.getNbrPlace();
+                }
+            }
+
+            if (vehiculeChoisi == null) {
+                for (Vehicule v : vehiculesDispo) {
+                    if (vehiculeChoisi == null || v.getNbrPlace() > vehiculeChoisi.getNbrPlace()) {
+                        vehiculeChoisi = v;
+                    }
+                }
+            }
+
+            LocalDateTime dispo = dispoVehicule.get(vehiculeChoisi.getId());
+            LocalDateTime arriveeClient = principale.getDateHeureArrive().toLocalDateTime();
+
+            LocalDateTime heureDepart = dispo.isAfter(arriveeClient) ? dispo : arriveeClient;
+
+            int pris = Math.min(restant, vehiculeChoisi.getNbrPlace());
+
+            // allocation principale
+            allocateToVehicule(
+                    principale, vehiculeChoisi, pris,
+                    date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
+                    dispoVehicule, nbTrajetsVehicule
+            );
+
+            restant -= pris;
+            restantMap.put(principale.getIdReservation(), restant);
+
+            int placesLibres = vehiculeChoisi.getNbrPlace() - pris;
+
+            // 🔥 REMPLISSAGE INTELLIGENT
+            if (placesLibres > 0) {
+
+                List<Reservation> candidats = new ArrayList<>();
+
+                for (Reservation autre : reservations) {
+
+                    if (autre.getIdReservation() == principale.getIdReservation())
+                        continue;
+
+                    int restantAutre = restantMap.get(autre.getIdReservation());
+                    if (restantAutre <= 0) continue;
+
+                    LocalDateTime heureAutre = autre.getDateHeureArrive().toLocalDateTime();
+
+                    long diff = Math.abs(Duration.between(arriveeClient, heureAutre).toMinutes());
+
+                    // 🔥 respect fenêtre
+                    if (diff > attenteMax) continue;
+
+                    candidats.add(autre);
+                }
+
+                // 🔥 best-fit remplissage
+                final int placesRef = placesLibres;
+
+                candidats.sort((a, b) -> {
+                    int rA = restantMap.get(a.getIdReservation());
+                    int rB = restantMap.get(b.getIdReservation());
+
+                    return Integer.compare(
+                        Math.abs(placesRef - rA),
+                        Math.abs(placesRef - rB)
+                    );
+                });
+                
+                for (Reservation autre : candidats) {
+
+                    int restantAutre = restantMap.get(autre.getIdReservation());
+                    if (restantAutre <= 0) continue;
+
+                    int aPrendre = Math.min(placesLibres, restantAutre);
+
+                    allocateToVehicule(
+                            autre, vehiculeChoisi, aPrendre,
+                            date, heureDepart, positionDepart, aeroport, vitesse, jdbcTemplate,
+                            dispoVehicule, nbTrajetsVehicule
+                    );
+
+                    restantAutre -= aPrendre;
+                    restantMap.put(autre.getIdReservation(), restantAutre);
+
+                    placesLibres -= aPrendre;
+
+                    if (restantAutre == 0) {
+                        Reservation.updateStatut(jdbcTemplate, autre.getIdReservation(), "planifie");
+                        traitees.add(autre.getIdReservation());
+                    } else {
+                        Reservation.updateStatut(jdbcTemplate, autre.getIdReservation(), "partiel");
+                    }
+
+                    if (placesLibres == 0) break;
+                }
+            }
+
+            vehiculesDispo.remove(vehiculeChoisi);
+        }
+
+        if (restant == 0) {
+            Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
+        } else {
+            Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "partiel");
+        }
+
+        traitees.add(principale.getIdReservation());
+    }
+
+    for (Reservation r : reservations) {
+        if (restantMap.get(r.getIdReservation()) > 0) {
+            Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
+        }
+    }
+}
     // HELPER METHOD: Alloue une réservation à un véhicule avec calcul de trajets
     private static void allocateToVehicule(
             Reservation principale,
