@@ -98,3 +98,5 @@ CREATE TABLE planning_transport (
 ------------------ sprint 7 --------------------------
 ALTER TABLE planning_transport
 ADD nombre_passagers_transportes INT;
+--------------------sprint 8 -------------------------
+ALTER TABLE planning_transport add type_regroupement VARCHAR(20);

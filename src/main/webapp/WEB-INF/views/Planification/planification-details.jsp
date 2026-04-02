@@ -379,6 +379,9 @@
                                                             <div class="badge badge-sm" style="background: #F6FAFD; color: #1A3D63; border: 2px solid #4A7FA7;">
                                                                 <i class="bi bi-people"></i> ${p.reservation.nombrePassagers} passagers
                                                             </div>
+                                                            <div class="badge badge-sm" style="background: #F6FAFD; color: #1A3D63; border: 2px solid #4A7FA7;">
+                                                                <i class="bi bi-people"></i> ${p.nombrePassagersTransportes} passagers transportés
+                                                            </div>
                                                         </div>
                                                     </c:when>
                                                     <c:otherwise>
