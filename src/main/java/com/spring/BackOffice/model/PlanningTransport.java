@@ -201,11 +201,13 @@ public class PlanningTransport {
     Map<Long, Integer> nbTrajetsVehicule = new HashMap<>();
     for (Vehicule v : vehicules) nbTrajetsVehicule.put(v.getId(), 0);
 
-    // 🔥 TreeMap pour traiter les fenêtres dans l'ordre chronologique
-    TreeMap<LocalDateTime, List<Reservation>> reservationsParFenetre = new TreeMap<>();
+    Map<Long, Integer> originalPassagers = new HashMap<>();
+    for (Reservation r : reservations) {
+        originalPassagers.put(r.getIdReservation(), r.getNombrePassagers());
+    }
 
-    // Trier par heure d'arrivée
-    reservations.sort((a, b) -> a.getDateHeureArrive().compareTo(b.getDateHeureArrive()));
+    TreeMap<LocalDateTime, List<Reservation>> reservationsParFenetre = new TreeMap<>();
+    reservations.sort(Comparator.comparing(r -> r.getDateHeureArrive().toLocalDateTime()));
 
     for (Reservation r : reservations) {
         LocalDateTime heure = r.getDateHeureArrive().toLocalDateTime();
@@ -220,61 +222,54 @@ public class PlanningTransport {
 
     Set<Long> traitees = new HashSet<>();
 
-    // 🔥 Traiter fenêtre par fenêtre dans l'ordre chronologique
-    // On utilise une copie des clés car on peut ajouter des fenêtres dynamiquement
     while (!reservationsParFenetre.isEmpty()) {
 
         LocalDateTime clesFenetre = reservationsParFenetre.firstKey();
         List<Reservation> resasFenetre = reservationsParFenetre.remove(clesFenetre);
-
-        // Garder uniquement les réservations avec des passagers restants
         resasFenetre.removeIf(r -> restantMap.get(r.getIdReservation()) <= 0);
         if (resasFenetre.isEmpty()) continue;
 
-        // Trier gros groupes d'abord
-        resasFenetre.sort((a, b) -> Integer.compare(b.getNombrePassagers(), a.getNombrePassagers()));
+        // Tri : non assignés d'abord, puis plus grand groupe
+        resasFenetre.sort((a, b) -> {
+            int restantA = restantMap.get(a.getIdReservation());
+            int restantB = restantMap.get(b.getIdReservation());
+            boolean aNonAssigne = restantA == originalPassagers.get(a.getIdReservation());
+            boolean bNonAssigne = restantB == originalPassagers.get(b.getIdReservation());
+            if (aNonAssigne != bNonAssigne) return aNonAssigne ? -1 : 1;
+            return Integer.compare(b.getNombrePassagers(), a.getNombrePassagers());
+        });
 
-        // 🔥 Calculer heureDepart = max(arrivées clients, dispos véhicules) dans cette fenêtre
+        // Heure de départ = max(arrivées clients dans la fenêtre, dispo véhicules)
         LocalDateTime maxDepart = resasFenetre.stream()
                 .map(r -> r.getDateHeureArrive().toLocalDateTime())
                 .max(LocalDateTime::compareTo)
                 .orElse(clesFenetre);
 
         for (Vehicule v : vehicules) {
-            FenetreDisponibilite fenetreDispo = fenetresDisponibilite.get(v.getId());
-            if (fenetreDispo == null) continue;
-
+            FenetreDisponibilite f = fenetresDisponibilite.get(v.getId());
+            if (f == null) continue;
             LocalDateTime dispo = dispoVehicule.get(v.getId());
-            if (dispo == null) continue;
-            if (dispo.isAfter(fenetreDispo.getFin())) continue;
-
-            // Véhicule dispo dans cette fenêtre ?
+            if (dispo == null || dispo.isAfter(f.getFin())) continue;
             LocalDateTime fenetreVehicule = getFenetreFixe(dispo, attenteMax);
             if (!fenetreVehicule.equals(clesFenetre)) continue;
-
-            if (dispo.isAfter(maxDepart)) {
-                maxDepart = dispo;
-            }
+            if (dispo.isAfter(maxDepart)) maxDepart = dispo;
         }
 
         final LocalDateTime heureDepart = maxDepart;
+        final LocalDateTime limiteAttente = heureDepart.plusMinutes(attenteMax);
 
         for (Reservation principale : resasFenetre) {
 
             int restant = restantMap.get(principale.getIdReservation());
             if (restant <= 0) continue;
 
-            // Véhicules disponibles à l'heure de départ de cette fenêtre
+            // Véhicules disponibles dans cette fenêtre
             List<Vehicule> vehiculesDispo = new ArrayList<>();
             for (Vehicule v : vehicules) {
-                FenetreDisponibilite fenetreDispo = fenetresDisponibilite.get(v.getId());
-                if (fenetreDispo == null) continue;
-
+                FenetreDisponibilite f = fenetresDisponibilite.get(v.getId());
+                if (f == null) continue;
                 LocalDateTime dispo = dispoVehicule.get(v.getId());
-                if (dispo == null) continue;
-                if (dispo.isAfter(fenetreDispo.getFin())) continue;
-                if (dispo.isAfter(heureDepart)) continue;
-
+                if (dispo == null || dispo.isAfter(f.getFin()) || dispo.isAfter(heureDepart)) continue;
                 vehiculesDispo.add(v);
             }
 
@@ -301,11 +296,9 @@ public class PlanningTransport {
                 }
 
                 if (vehiculeChoisi == null) {
-                    for (Vehicule v : vehiculesDispo) {
-                        if (vehiculeChoisi == null || v.getNbrPlace() > vehiculeChoisi.getNbrPlace()) {
-                            vehiculeChoisi = v;
-                        }
-                    }
+                    vehiculeChoisi = vehiculesDispo.stream()
+                            .max(Comparator.comparingInt(Vehicule::getNbrPlace))
+                            .orElse(null);
                 }
 
                 int pris = Math.min(restant, vehiculeChoisi.getNbrPlace());
@@ -321,22 +314,33 @@ public class PlanningTransport {
 
                 int placesLibres = vehiculeChoisi.getNbrPlace() - pris;
 
-                // 🔥 REMPLISSAGE avec autres réservations de la même fenêtre
+                // REMPLISSAGE
                 if (placesLibres > 0) {
 
                     List<Reservation> candidats = new ArrayList<>();
-                    for (Reservation autre : resasFenetre) {
+                    for (Reservation autre : reservations) {
                         if (autre.getIdReservation() == principale.getIdReservation()) continue;
                         int restantAutre = restantMap.get(autre.getIdReservation());
                         if (restantAutre <= 0) continue;
+
+                        LocalDateTime heureAutre = autre.getDateHeureArrive().toLocalDateTime();
+                        // 🔥 Condition CORRIGÉE : arrivée avant limiteAttente ET avant départ véhicule
+                        if (heureAutre.isAfter(limiteAttente) || heureAutre.isAfter(heureDepart)) continue;
+
                         candidats.add(autre);
                     }
 
                     final int placesRef = placesLibres;
                     candidats.sort((a, b) -> {
-                        int rA = restantMap.get(a.getIdReservation());
-                        int rB = restantMap.get(b.getIdReservation());
-                        return Integer.compare(Math.abs(placesRef - rA), Math.abs(placesRef - rB));
+                        int restantA = restantMap.get(a.getIdReservation());
+                        int restantB = restantMap.get(b.getIdReservation());
+                        boolean aNA = restantA == originalPassagers.get(a.getIdReservation());
+                        boolean bNA = restantB == originalPassagers.get(b.getIdReservation());
+                        if (aNA != bNA) return aNA ? -1 : 1;
+                        return Integer.compare(
+                                Math.abs(placesRef - restantA),
+                                Math.abs(placesRef - restantB)
+                        );
                     });
 
                     for (Reservation autre : candidats) {
@@ -369,13 +373,11 @@ public class PlanningTransport {
                 vehiculesDispo.remove(vehiculeChoisi);
             }
 
-            // 🔥 Si encore des passagers restants → reporter dans la fenêtre suivante
+            // Si encore des passagers restants → reporter dans la fenêtre suivante
             int restantFinal = restantMap.get(principale.getIdReservation());
             if (restantFinal > 0) {
                 LocalDateTime prochaineFenetre = clesFenetre.plusMinutes(attenteMax);
-                reservationsParFenetre
-                        .computeIfAbsent(prochaineFenetre, k -> new ArrayList<>())
-                        .add(principale);
+                reservationsParFenetre.computeIfAbsent(prochaineFenetre, k -> new ArrayList<>()).add(principale);
                 Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "partiel");
             } else {
                 Reservation.updateStatut(jdbcTemplate, principale.getIdReservation(), "planifie");
@@ -384,13 +386,13 @@ public class PlanningTransport {
         }
     }
 
-    // 🔥 Annuler les réservations encore non complètes
+    // Toutes les réservations restantes non assignées → annulées
     for (Reservation r : reservations) {
         if (restantMap.get(r.getIdReservation()) > 0) {
             Reservation.updateStatut(jdbcTemplate, r.getIdReservation(), "annule");
         }
     }
-}   
+}
  // HELPER METHOD: Alloue une réservation à un véhicule avec calcul de trajets
     private static void allocateToVehicule(
             Reservation principale,
